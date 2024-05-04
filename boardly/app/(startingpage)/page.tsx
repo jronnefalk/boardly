@@ -1,9 +1,16 @@
 import Link from "next/link";
-import { Poppins } from "next/font/google";
+import { Poppins, Luckiest_Guy } from "next/font/google";
 
 import { cn } from "@/lib/utils"
 
-const textFont = Poppins({
+const textFont = Luckiest_Guy({
+    subsets: ["latin"],
+    weight: [
+        "400",
+    ],
+});
+
+const smallTextFont = Poppins({
     subsets: ["latin"],
     weight: [
         "100",
@@ -28,13 +35,16 @@ const StartingPage = () => {
                 <h1 className="text-4xl md:text-7xl text-center text-neutral-800 mb-6">
                     Boardly  
                 </h1>
-                <div className="text-2xl md:text-2xl bg-gradient-to-r from-sky-600 to-sky-300 text-white px-4 p-2 rounded-2xl 2-fit">
-                    Empower your workflow
+                <div className={cn(
+                    "text-2xl md:text-2xl bg-gradient-to-r from-sky-600 to-sky-300 text-white px-4 p-2 rounded-2xl 2-fit",
+                    smallTextFont.className,
+                )}>
+                    <p>Empower your workflow</p>
                 </div>
             </div>
             <div className={cn(
                 "text-sm md:text-xl text-neutral-400 mt-4 max-w-xs md:max-w-2xl text-center mx-auto",
-                textFont.className,
+                smallTextFont.className,
             )}>
             Why choose Boardly?
 
@@ -44,7 +54,6 @@ const StartingPage = () => {
             Get started today and transform the way your team works!
             </div>
         </div>
-        
     );
 };
 
