@@ -1,24 +1,17 @@
 import { Logo } from "@/components/logo";
-import { Button } from "@/components/ui/button";
-import { LoginLink, RegisterLink } from "@kinde-oss/kinde-auth-nextjs/components";
+import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { AuthButtons } from "@/components/authButtons";
 
-export const Navbar = () => {
+export default async function Navbar() {
+    const session = getKindeServerSession();
+    const isAuthenticated = await session.isAuthenticated();
+
     return (
-        <div className="fixed top-0 w-full h-14 px-4 border-b 
-        shadow-sm bg-white flex items-center">
-            <div className="md:max-w-screen-2xl mx-auto flex
-            items together w-full justify-between">
-            <Logo/>
-            <div className="space-x-4 md:block md:w-auto flex items-center
-            justify-between w-full">
-                <Button size="sm" variant="outline" asChild>
-                    <LoginLink>Login</LoginLink>
-                </Button>
-                <Button size="sm" variant="outline" asChild>
-                    <RegisterLink>Sign up</RegisterLink>
-                </Button>
-            </div>
+        <div className="fixed top-0 w-full h-14 px-4 border-b shadow-sm bg-white flex items together">
+            <div className="md:max-w-screen-2xl mx-auto flex items-center w-full justify-between">
+                <Logo />
+                <AuthButtons isAuthenticated={isAuthenticated} />
             </div>
         </div>
     );
-};
+}

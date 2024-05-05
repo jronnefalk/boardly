@@ -27,7 +27,7 @@ This project is a web-based, real-time collaborative project management tool. In
 
 - **Server**: Node.js with Express.js.
 - **Database**: MongoDB
-- **Authentication**: auth0
+- **Authentication**: Kinde
 
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
