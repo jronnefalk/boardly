@@ -15,23 +15,32 @@ export async function getUserInfo(): Promise<{ isAuthenticated: boolean; user: C
     const user = isAuthenticated ? await session.getUser() : null;
 
     if (user) {
+        const email = user.email ?? "";
+        const given_name = user.given_name ?? "";
+        const family_name = user.family_name ?? "";
+
         await prisma.user.upsert({
-            where: { email: user.email ?? "" },
+            where: { email },
             update: {
-                firstName: user.given_name ?? "",
-                lastName: user.family_name ?? "",
+                firstName: given_name,
+                lastName: family_name,
             },
             create: {
-                email: user.email ?? "",
-                firstName: user.given_name ?? "",
-                lastName: user.family_name ?? "",
+                email,
+                firstName: given_name,
+                lastName: family_name,
             },
         });
 
-        // Get user with workspaces
         const userData = await prisma.user.findUnique({
-            where: { email: user.email ?? "" },
-            include: { workspaces: { include: { workspace: true } } },
+            where: { email },
+            include: {
+                workspaces: {
+                    include: {
+                        workspace: true,
+                    },
+                },
+            },
         });
 
         user.workspaces = userData?.workspaces.map((uw) => uw.workspace) || [];
