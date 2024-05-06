@@ -1,10 +1,11 @@
-import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
-import { KindeUser } from '@kinde-oss/kinde-auth-nextjs/types';
-import { PrismaClient } from '@prisma/client';
+import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { KindeUser } from "@kinde-oss/kinde-auth-nextjs/types";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 type CustomUser = KindeUser & {
+    id: string;
     workspaces?: { id: string; name: string }[];
 };
 
@@ -14,22 +15,23 @@ export async function getUserInfo(): Promise<{ isAuthenticated: boolean; user: C
     const user = isAuthenticated ? await session.getUser() : null;
 
     if (user) {
+        // Save or update the user in the database
         await prisma.user.upsert({
-            where: { email: user.email ?? '' },
+            where: { email: user.email ?? "" },
             update: {
-                firstName: user.given_name ?? '',
-                lastName: user.family_name ?? '',
+                firstName: user.given_name ?? "",
+                lastName: user.family_name ?? "",
             },
             create: {
-                email: user.email ?? '',
-                firstName: user.given_name ?? '',
-                lastName: user.family_name ?? '',
+                email: user.email ?? "",
+                firstName: user.given_name ?? "",
+                lastName: user.family_name ?? "",
             },
         });
 
-        // Get user with workspaces
+        // Fetch the user along with their workspaces
         const userData = await prisma.user.findUnique({
-            where: { email: user.email ?? '' },
+            where: { email: user.email ?? "" },
             include: { workspaces: { include: { workspace: true } } },
         });
 

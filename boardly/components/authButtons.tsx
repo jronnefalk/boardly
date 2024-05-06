@@ -2,25 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { LoginLink, RegisterLink, LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
-import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 
 export const AuthButtons = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
-    
-    // const { getUser, isLoading } = useKindeBrowserClient();
-
-    // function logUserData() {
-    //     if (!isLoading && getUser) {
-    //         const user = getUser();
-    //         if (user) {
-    //             console.log("User Data:", user);
-    //         } else {
-    //             console.log("No user is authenticated.");
-    //         }
-    //     }
-    // }
-
-    // logUserData();
-
     return (
         <div className="space-x-4 md:block md:w-auto flex items-center justify-between w-full">
             {isAuthenticated ? (
