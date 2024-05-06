@@ -15,7 +15,6 @@ export async function getUserInfo(): Promise<{ isAuthenticated: boolean; user: C
     const user = isAuthenticated ? await session.getUser() : null;
 
     if (user) {
-        // Save or update the user in the database
         await prisma.user.upsert({
             where: { email: user.email ?? "" },
             update: {
@@ -29,7 +28,7 @@ export async function getUserInfo(): Promise<{ isAuthenticated: boolean; user: C
             },
         });
 
-        // Fetch the user along with their workspaces
+        // Get user with workspaces
         const userData = await prisma.user.findUnique({
             where: { email: user.email ?? "" },
             include: { workspaces: { include: { workspace: true } } },
