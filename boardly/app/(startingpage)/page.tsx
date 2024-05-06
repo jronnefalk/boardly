@@ -28,7 +28,7 @@ const StartingPage = () => {
                     Boardly  
                 </h1>
                 <div className="text-2xl md:text-2xl bg-gradient-to-r from-sky-600 to-sky-300 text-white px-4 p-2 rounded-2xl 2-fit">
-                    <p>Empower your workflow</p>
+                    <p>Task management. But better.</p>
                 </div>
             </div>
             <div className={cn(

@@ -1,18 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import CreateWorkspaceButton from "@/components/createWorkspaceButton";
+import { Button } from "@/components/ui/button";
+
+interface Workspace {
+    id: string;
+    name: string;
+}
 
 export default function DashboardPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const selectedWorkspaceId = searchParams.get("workspaceId") ?? "";
-
-    const [workspaces, setWorkspaces] = useState<{ id: string; name: string }[]>([]);
+    const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
     const [userName, setUserName] = useState("");
     const [currentWorkspaceId, setCurrentWorkspaceId] = useState(selectedWorkspaceId);
+    const [errorMessage, setErrorMessage] = useState("");
 
     useEffect(() => {
         async function fetchUserInfo() {
@@ -35,6 +41,37 @@ export default function DashboardPage() {
         router.push(`/dashboard?workspaceId=${workspaceId}`);
     };
 
+    const handleDeleteWorkspace = async () => {
+        if (!currentWorkspaceId) {
+            return;
+        }
+
+        const confirmed = window.confirm("Are you sure you want to delete this workspace?");
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/workspaces?id=${currentWorkspaceId}`, {
+                method: "DELETE",
+            });
+
+            if (response.ok) {
+                setWorkspaces((prev) => prev.filter((ws) => ws.id !== currentWorkspaceId));
+                setCurrentWorkspaceId(workspaces[0]?.id ?? "");
+                setErrorMessage("");
+                router.push("/dashboard");
+            } else {
+                const data = await response.json();
+                setErrorMessage(data.error || "Failed to delete workspace");
+                console.error("Failed to delete workspace:", data);
+            }
+        } catch (error) {
+            setErrorMessage("An unexpected error occurred");
+            console.error("Error deleting workspace:", error);
+        }
+    };
+
     return (
         <div>
             <h1>Dashboard</h1>
@@ -55,7 +92,20 @@ export default function DashboardPage() {
                 </Select>
             )}
 
-            <CreateWorkspaceButton />
+            <div className="flex space-x-2 mt-4">
+                <CreateWorkspaceButton />
+                {currentWorkspaceId && (
+                    <Button onClick={handleDeleteWorkspace} variant="destructive">
+                        Delete Workspace
+                    </Button>
+                )}
+            </div>
+
+            {errorMessage && (
+                <div className="mt-4 text-red-600">
+                    {errorMessage}
+                </div>
+            )}
         </div>
     );
 }
