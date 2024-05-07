@@ -25,6 +25,7 @@ export async function createWorkspaceServer(workspaceName: string) {
                     user: {
                         connect: { email: user.email },
                     },
+                    role: "ADMIN",
                 },
             },
         },
