@@ -5,6 +5,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import CreateWorkspaceButton from "@/components/createWorkspaceButton";
 import { Button } from "@/components/ui/button";
+import { Poppins } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const textFont = Poppins({
+    subsets: ["latin"],
+    weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+});
 
 interface Workspace {
     id: string;
@@ -73,9 +80,8 @@ export default function DashboardPage() {
     };
 
     return (
-        <div>
-            <h1>Dashboard</h1>
-            <p>Welcome, {userName}!</p>
+        <div className="flex flex-col items-center">
+            <h1 className={cn("text-4xl mb-4 text-white", textFont.className)}>Welcome, {userName}!</h1>
 
             {workspaces.length > 0 && (
                 <Select onValueChange={handleWorkspaceSwitch} defaultValue={currentWorkspaceId}>
