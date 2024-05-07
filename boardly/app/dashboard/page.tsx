@@ -5,8 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import CreateWorkspaceButton from "@/components/createWorkspaceButton";
 import { Button } from "@/components/ui/button";
-import AddUserButton from "@/components/addUserButton"; // Changed import
-import ChangeUserRoleButton from "@/components/changeUserRoleButton";
 import { Poppins } from "next/font/google";
 import { cn } from "@/lib/utils";
 
@@ -18,14 +16,6 @@ const textFont = Poppins({
 interface Workspace {
     id: string;
     name: string;
-    users: {
-        id: string;
-        role: string;
-        user: {
-            id: string;
-            email: string;
-        };
-    }[];
 }
 
 export default function DashboardPage() {
@@ -116,25 +106,6 @@ export default function DashboardPage() {
                     </Button>
                 )}
             </div>
-
-            {currentWorkspaceId && (
-                <div className="flex space-x-2 mt-4">
-                    <AddUserButton workspaceId={currentWorkspaceId} /> {/* Changed component */}
-                </div>
-            )}
-
-            {currentWorkspaceId && (
-                <div className="flex flex-col space-y-2 mt-4">
-                    {workspaces.find((ws) => ws.id === currentWorkspaceId)?.users?.map((userWorkspace) => (
-                        <ChangeUserRoleButton
-                            key={userWorkspace.user.id}
-                            workspaceId={currentWorkspaceId}
-                            userId={userWorkspace.user.id}
-                            currentRole={userWorkspace.role}
-                        />
-                    ))}
-                </div>
-            )}
 
             {errorMessage && (
                 <div className="mt-4 text-red-600">
