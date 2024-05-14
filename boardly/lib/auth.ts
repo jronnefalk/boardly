@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 
 type CustomUser = KindeUser & {
     id: string;
-    workspaces?: { id: string; name: string }[];
+    workspaces?: { id: string; name: string; role: string }[];
 };
 
 export async function getUserInfo(): Promise<{ isAuthenticated: boolean; user: CustomUser | null }> {
@@ -43,7 +43,13 @@ export async function getUserInfo(): Promise<{ isAuthenticated: boolean; user: C
             },
         });
 
-        user.workspaces = userData?.workspaces.map((uw) => uw.workspace) || [];
+        if (userData && userData.workspaces) {
+            (user as CustomUser).workspaces = userData.workspaces.map(uw => ({
+                id: uw.workspace.id,
+                name: uw.workspace.name,
+                role: uw.role ?? "VIEWER", // Ensure the role is always set
+            }));
+        }
     }
 
     return { isAuthenticated, user };
