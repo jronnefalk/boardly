@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
+import { createWorkspaceServer } from '@/lib/workspace';
 
 const prisma = new PrismaClient();
 
