@@ -1,7 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-
-const prisma = new PrismaClient();
+import prisma from "./prisma";
 
 export async function createWorkspaceServer(workspaceName: string) {
     const session = getKindeServerSession();

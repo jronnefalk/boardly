@@ -9,6 +9,7 @@ import { Poppins } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import AddUserButton from '@/components/addUserButton';
 import ChangeUserRoleButton from '@/components/changeUserRoleButton';
+import Sidebar from '@/components/Sidebar';
 import { toast } from 'sonner';
 
 const textFont = Poppins({
@@ -76,8 +77,7 @@ export default function DashboardPage() {
 
       if (response.ok) {
         setWorkspaces((prev) => prev.filter((ws) => ws.id !== currentWorkspaceId));
-        setCurrentWorkspaceId(workspaces[0]?.id ?? '');
-        setErrorMessage('');
+        setCurrentWorkspaceId(workspaces.length > 1 ? workspaces[0]?.id : '');  // Switch to another workspace or clear the selection
         toast.success('Workspace deleted successfully!');
         router.push('/dashboard');
       } else {
@@ -91,8 +91,15 @@ export default function DashboardPage() {
     }
   };
 
+  const handleAddWorkspace = (newWorkspace: Workspace) => {
+    setWorkspaces((prev) => [...prev, newWorkspace]);
+    setCurrentWorkspaceId(newWorkspace.id);
+    router.push(`/dashboard?workspaceId=${newWorkspace.id}`);  
+  };
+
   return (
     <div className="flex flex-col items-center">
+      <Sidebar workspaces={workspaces} currentWorkspaceId={currentWorkspaceId} />
       <h1 className={cn('text-4xl mb-4 text-white', textFont.className)}>Welcome, {userName}!</h1>
 
       {workspaces.length > 0 && (
@@ -111,7 +118,7 @@ export default function DashboardPage() {
       )}
 
       <div className="flex space-x-2 mt-4">
-        <CreateWorkspaceButton />
+        <CreateWorkspaceButton onWorkspaceCreated={handleAddWorkspace} />
         {currentWorkspaceId && (
           <Button onClick={handleDeleteWorkspace} variant="destructive">
             Delete Workspace

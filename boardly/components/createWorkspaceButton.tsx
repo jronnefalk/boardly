@@ -8,7 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
-export default function CreateWorkspaceButton() {
+interface CreateWorkspaceButtonProps {
+  onWorkspaceCreated: (workspace: { id: string; name: string }) => void;
+}
+
+export default function CreateWorkspaceButton({ onWorkspaceCreated }: CreateWorkspaceButtonProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [workspaceName, setWorkspaceName] = useState('');
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
@@ -29,7 +33,8 @@ export default function CreateWorkspaceButton() {
 
       if (response.ok) {
         toast.success('Workspace created successfully!');
-        router.push('/dashboard');
+        onWorkspaceCreated(data.workspace); 
+        router.push(`/dashboard?workspaceId=${data.workspace.id}`);
         setIsPopoverOpen(false);
       } else {
         toast.error(data.error || 'Failed to create workspace');

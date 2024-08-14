@@ -1,8 +1,6 @@
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { KindeUser } from "@kinde-oss/kinde-auth-nextjs/types";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "./prisma";
 
 type CustomUser = KindeUser & {
     id: string;
@@ -47,7 +45,7 @@ export async function getUserInfo(): Promise<{ isAuthenticated: boolean; user: C
             (user as CustomUser).workspaces = userData.workspaces.map(uw => ({
                 id: uw.workspace.id,
                 name: uw.workspace.name,
-                role: uw.role ?? "VIEWER", // Ensure the role is always set
+                role: uw.role ?? "VIEWER", 
             }));
         }
     }
