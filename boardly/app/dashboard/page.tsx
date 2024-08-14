@@ -100,7 +100,7 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col items-center">
       <Sidebar workspaces={workspaces} currentWorkspaceId={currentWorkspaceId} />
-      <h1 className={cn('text-4xl mb-4 text-white', textFont.className)}>Welcome, {userName}!</h1>
+      <h2 className={cn('text-4xl mb-4 text-black', textFont.className)}>Welcome, {userName}!</h2>
 
       {workspaces.length > 0 && (
         <Select onValueChange={handleWorkspaceSwitch} defaultValue={currentWorkspaceId}>
