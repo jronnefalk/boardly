@@ -11,7 +11,7 @@ const textFont = Poppins({
 });
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-    const session = await getKindeServerSession();
+    const session = getKindeServerSession();
     const isAuthenticated = await session.isAuthenticated(); 
     const user = isAuthenticated ? await session.getUser() : null;
 
