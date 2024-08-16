@@ -31,9 +31,9 @@ export async function POST(request: Request) {
         users: {
           create: {
             user: {
-              connect: { id: dbUser.id },  // Make sure dbUser.id is an ObjectID
+              connect: { id: dbUser.id },
             },
-            role: 'ADMIN',  // Optionally set a default role
+            role: 'ADMIN',
           },
         },
       },
@@ -46,32 +46,12 @@ export async function POST(request: Request) {
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { workspaceId: string } }) {
+export async function GET(request: Request) {
   try {
-      const { workspaceId } = params;
-
-      if (!workspaceId) {
-          return NextResponse.json({ error: 'Workspace ID is required' }, { status: 400 });
-      }
-
-      // First, delete all related boards
-      await prisma.board.deleteMany({
-          where: { workspaceId },
-      });
-
-      // Then, delete all related UserWorkspace entries
-      await prisma.userWorkspace.deleteMany({
-          where: { workspaceId },
-      });
-
-      // Finally, delete the workspace
-      await prisma.workspace.delete({
-          where: { id: workspaceId },
-      });
-
-      return NextResponse.json({ message: 'Workspace and related boards deleted successfully' }, { status: 200 });
+    const workspaces = await prisma.workspace.findMany();
+    return NextResponse.json({ workspaces }, { status: 200 });
   } catch (error) {
-      console.error('Error deleting workspace:', error);
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error('Error fetching workspaces:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

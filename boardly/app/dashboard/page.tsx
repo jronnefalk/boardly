@@ -9,7 +9,6 @@ import { Poppins } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import AddUserButton from '@/components/addUserButton';
 import ChangeUserRoleButton from '@/components/changeUserRoleButton';
-import Sidebar from '@/components/Sidebar';
 import { toast } from 'sonner';
 
 const textFont = Poppins({
@@ -64,20 +63,20 @@ export default function DashboardPage() {
     if (!currentWorkspaceId) {
       return;
     }
-
+  
     const confirmed = window.confirm('Are you sure you want to delete this workspace?');
     if (!confirmed) {
       return;
     }
-
+  
     try {
-      const response = await fetch(`/api/workspaces?id=${currentWorkspaceId}`, {
+      const response = await fetch(`/api/workspaces/${currentWorkspaceId}`, {
         method: 'DELETE',
       });
-
+  
       if (response.ok) {
         setWorkspaces((prev) => prev.filter((ws) => ws.id !== currentWorkspaceId));
-        setCurrentWorkspaceId(workspaces.length > 1 ? workspaces[0]?.id : '');  // Switch to another workspace or clear the selection
+        setCurrentWorkspaceId(workspaces.length > 1 ? workspaces[0]?.id : ''); // Switch to another workspace or clear the selection
         toast.success('Workspace deleted successfully!');
         router.push('/dashboard');
       } else {
@@ -89,7 +88,8 @@ export default function DashboardPage() {
       setErrorMessage('An unexpected error occurred');
       toast.error('Error deleting workspace: ' + error.message);
     }
-  };
+  };  
+  
 
   const handleAddWorkspace = (newWorkspace: Workspace) => {
     setWorkspaces((prev) => [...prev, newWorkspace]);
@@ -99,7 +99,6 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col items-center">
-      <Sidebar workspaces={workspaces} currentWorkspaceId={currentWorkspaceId} />
       <h2 className={cn('text-4xl mb-4 text-black', textFont.className)}>Welcome, {userName}!</h2>
 
       {workspaces.length > 0 && (

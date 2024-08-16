@@ -38,6 +38,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
     return (
         <div className={cn("min-h-screen flex")}>
+            <Sidebar workspaces={workspaces} currentWorkspaceId={workspaces[0]?.id} />
             <div className={cn("min-h-screen flex flex-col", textFont.className)}>
                 <Navbar /> 
                 <div className="flex-grow flex items-center justify-center flex-col pt-16">

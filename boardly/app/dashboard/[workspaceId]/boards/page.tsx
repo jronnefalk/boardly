@@ -54,16 +54,12 @@ export default function BoardsPage() {
 
   const handleDeleteBoard = async (boardId: string) => {
     try {
-      const response = await fetch(`/api/workspaces/${workspaceId}/boards`, {
+      const response = await fetch(`/api/workspaces/${workspaceId}/boards/${boardId}`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ boardId }),
       });
 
       if (response.ok) {
-        setBoards(boards.filter((board) => board.id !== boardId));
+        setBoards(boards.filter((board) => board.id !== boardId)); // Remove the deleted board from the UI
         toast.success('Board deleted successfully!');
       } else {
         const data = await response.json();
@@ -73,7 +69,6 @@ export default function BoardsPage() {
       toast.error('Error deleting board: ' + error.message);
     }
   };
-
 
   return (
     <div>
@@ -91,11 +86,11 @@ export default function BoardsPage() {
       <ul>
         {boards.map((board) => (
           <li key={board.id} className="mb-2 flex items-center justify-between">
-          <span>{board.title}</span>
-          <Button onClick={() => handleDeleteBoard(board.id)} variant="destructive">
-            Delete
-          </Button>
-        </li>
+            <span>{board.title}</span>
+            <Button onClick={() => handleDeleteBoard(board.id)} variant="destructive">
+              Delete
+            </Button>
+          </li>
         ))}
       </ul>
     </div>

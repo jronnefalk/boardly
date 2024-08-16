@@ -23,6 +23,13 @@ model Workspace {
   boards    Board[]     
 }
 
+model Board {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id])
+  workspaceId String     @db.ObjectId
+}
+
 model UserWorkspace {
   id          String     @id @default(auto()) @map("_id") @db.ObjectId
   userId      String     @db.ObjectId
@@ -30,13 +37,6 @@ model UserWorkspace {
   user        User       @relation(fields: [userId], references: [id])
   workspace   Workspace  @relation(fields: [workspaceId], references: [id])
   role        Role       @default(ADMIN)
-}
-
-model Board {
-  id          String     @id @default(auto()) @map("_id") @db.ObjectId
-  title       String
-  workspace   Workspace  @relation(fields: [workspaceId], references: [id])
-  workspaceId String     @db.ObjectId
 }
 
 enum Role {
