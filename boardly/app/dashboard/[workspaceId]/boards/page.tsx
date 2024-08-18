@@ -1,25 +1,27 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import Board from '@/components/Board/Board';
+import Board from '@/components/board/Board';
 
-interface Board {
+interface BoardData {
   id: string;
   title: string;
 }
 
 export default function BoardsPage() {
   const router = useRouter();
-  const { workspaceId } = useParams();
-  const [boards, setBoards] = useState<Board[]>([]);
+  const { workspaceId } = useParams<{ workspaceId: string }>();
+  const [boards, setBoards] = useState<BoardData[]>([]);
   const [newBoardTitle, setNewBoardTitle] = useState('');
+  const [selectedBoardId, setSelectedBoardId] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log("Fetching boards for workspaceId:", workspaceId);
     async function fetchBoards() {
       const response = await fetch(`/api/workspaces/${workspaceId}/boards`);
       const data = await response.json();
@@ -60,7 +62,7 @@ export default function BoardsPage() {
       });
 
       if (response.ok) {
-        setBoards(boards.filter((board) => board.id !== boardId)); // Remove the deleted board from the UI
+        setBoards(boards.filter((board) => board.id !== boardId));
         toast.success('Board deleted successfully!');
       } else {
         const data = await response.json();
@@ -69,6 +71,10 @@ export default function BoardsPage() {
     } catch (error: any) {
       toast.error('Error deleting board: ' + error.message);
     }
+  };
+
+  const handleSelectBoard = (boardId: string) => {
+    setSelectedBoardId(boardId);
   };
 
   return (
@@ -86,7 +92,11 @@ export default function BoardsPage() {
       </div>
       <ul>
         {boards.map((board) => (
-          <li key={board.id} className="mb-2 flex items-center justify-between">
+          <li
+            key={board.id}
+            className="mb-2 flex items-center justify-between cursor-pointer"
+            onClick={() => handleSelectBoard(board.id)}
+          >
             <span>{board.title}</span>
             <Button onClick={() => handleDeleteBoard(board.id)} variant="destructive">
               Delete
@@ -95,7 +105,9 @@ export default function BoardsPage() {
         ))}
       </ul>
 
-      <Board/>
+      {selectedBoardId && (
+        <Board workspaceId={workspaceId} boardId={selectedBoardId} />
+      )}
     </div>
   );
 }

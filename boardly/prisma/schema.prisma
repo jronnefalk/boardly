@@ -28,6 +28,7 @@ model Board {
   title       String
   workspace   Workspace  @relation(fields: [workspaceId], references: [id])
   workspaceId String     @db.ObjectId
+  columns     Column[]  
 }
 
 model UserWorkspace {
@@ -39,10 +40,25 @@ model UserWorkspace {
   role        Role       @default(ADMIN)
 }
 
+model Column {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  position  Int
+  boardId   String   @db.ObjectId
+  board     Board    @relation(fields: [boardId], references: [id])
+  cards     Card[]
+}
+
+model Card {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  content   String
+  column    Column  @relation(fields: [columnId], references: [id])
+  columnId  String  @db.ObjectId
+  position  Int    
+}
+
 enum Role {
   ADMIN
   REPORTER
   VIEWER
 }
-
-

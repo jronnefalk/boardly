@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Task } from './Board/Board';
+import { Task } from './board/Board';
 
 interface ModalProps {
   task: Task | null;
