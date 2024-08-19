@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import Modal from '../Modal';
 
 export interface Task {
@@ -407,9 +408,30 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId }) => {
                             >
                               {column.name}
                             </h2>
-                            <button onClick={() => deleteColumn(columnId)} style={{ marginLeft: 'auto' }}>
-                              Delete List
-                            </button>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px' }}>
+                                  ⋮
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent align="end" sideOffset={8}>
+                                <button
+                                  onClick={() => {
+                                    const newName = prompt('Enter new list name', column.name);
+                                    if (newName) renameColumn(columnId, newName);
+                                  }}
+                                  style={{ display: 'block', width: '100%', padding: '8px', textAlign: 'left' }}
+                                >
+                                  Rename Column
+                                </button>
+                                <button
+                                  onClick={() => deleteColumn(columnId)}
+                                  style={{ display: 'block', width: '100%', padding: '8px', textAlign: 'left', color: 'red' }}
+                                >
+                                  Delete Column
+                                </button>
+                              </PopoverContent>
+                            </Popover>
                           </div>
                           <Droppable droppableId={columnId} key={columnId}>
                             {(provided, snapshot) => (
