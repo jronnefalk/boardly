@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma"; 
 import { getUserInfo } from "@/lib/auth";
+import { logActivity } from "@/lib/logActivity";
 
 export async function POST(request: Request, { params }: { params: { workspaceId: string } }) {
     try {
@@ -43,6 +44,8 @@ export async function POST(request: Request, { params }: { params: { workspaceId
                 workspaceId,
             },
         });
+
+        await logActivity("created board", `created board "${title}"`, newBoard.id);
 
         return NextResponse.json({ board: newBoard }, { status: 201 });
     } catch (error: any) {

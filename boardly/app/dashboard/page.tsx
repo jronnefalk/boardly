@@ -58,6 +58,7 @@ export default function DashboardPage() {
     setCurrentWorkspaceId(workspaceId);
     router.push(`/dashboard?workspaceId=${workspaceId}`);
   };
+  
 
   const handleDeleteWorkspace = async () => {
     if (!currentWorkspaceId) {

@@ -13,6 +13,7 @@ model User {
   firstName String
   lastName  String
   workspaces UserWorkspace[]
+  activities Activity[]
 }
 
 model Workspace {
@@ -21,6 +22,7 @@ model Workspace {
   createdBy String        
   users     UserWorkspace[]
   boards    Board[]     
+  activities Activity[]
 }
 
 model Board {
@@ -29,6 +31,7 @@ model Board {
   workspace   Workspace  @relation(fields: [workspaceId], references: [id])
   workspaceId String     @db.ObjectId
   columns     Column[]  
+  activities Activity[]
 }
 
 model UserWorkspace {
@@ -47,6 +50,7 @@ model Column {
   boardId   String   @db.ObjectId
   board     Board    @relation(fields: [boardId], references: [id])
   cards     Card[]
+  activities Activity[]
 }
 
 model Card {
@@ -54,8 +58,29 @@ model Card {
   content   String
   column    Column  @relation(fields: [columnId], references: [id])
   columnId  String  @db.ObjectId
-  position  Int    
+  position  Int 
+  activities Activity[]   
 }
+
+model Activity {
+  id          String   @id @default(cuid()) @map("_id")
+  action      String
+  description String
+  createdAt   DateTime @default(now())
+  userId      String   
+  boardId     String?  
+  columnId    String?  
+  cardId      String?  
+  workspaceId String  // Add this line
+
+  user        User     @relation(fields: [userId], references: [id])
+  board       Board?   @relation(fields: [boardId], references: [id])
+  column      Column?  @relation(fields: [columnId], references: [id])
+  card        Card?    @relation(fields: [cardId], references: [id])
+  workspace   Workspace @relation(fields: [workspaceId], references: [id]) 
+}
+
+
 
 enum Role {
   ADMIN

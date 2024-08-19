@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -43,11 +43,11 @@ const Sidebar: React.FC<SidebarProps> = ({ workspaces, currentWorkspaceId }) => 
             {expandedWorkspace === workspace.id && (
               <ul className="ml-4 mt-2 space-y-2">
                 <li>
-                    <Link href={`/dashboard/${workspace.id}/boards`}>
-                        <div className={`block p-2 hover:bg-gray-200 rounded ${pathname === `/dashboard/${workspace.id}/boards` ? 'bg-gray-200' : ''}`}>
-                            Boards
-                        </div>
-                    </Link>
+                  <Link href={`/dashboard/${workspace.id}/boards`}>
+                    <div className={`block p-2 hover:bg-gray-200 rounded ${pathname === `/dashboard/${workspace.id}/boards` ? 'bg-gray-200' : ''}`}>
+                      Boards
+                    </div>
+                  </Link>
                 </li>
                 <li>
                   <Link href={`/dashboard/${workspace.id}/activity`}>

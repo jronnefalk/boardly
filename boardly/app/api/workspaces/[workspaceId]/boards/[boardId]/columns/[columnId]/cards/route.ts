@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { logActivity } from '@/lib/logActivity';
 
-export async function POST(request: Request, { params }: { params: { columnId: string } }) {
+export async function POST(request: Request, { params }: { params: { columnId: string, boardId: string, workspaceId: string } }) {
   try {
     const { content, position } = await request.json();
-    const { columnId } = params;
+    const { columnId, boardId, workspaceId } = params;  // Get workspaceId from params
 
     if (!columnId) {
       return NextResponse.json({ error: 'Column ID is required' }, { status: 400 });
@@ -25,6 +26,9 @@ export async function POST(request: Request, { params }: { params: { columnId: s
         columnId,
       },
     });
+
+    // Ensure workspaceId is passed correctly to logActivity
+    await logActivity("created card", `created card "${content}"`, workspaceId, columnId, newCard.id);
 
     return NextResponse.json(newCard, { status: 201 });
   } catch (error) {

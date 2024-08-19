@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { logActivity } from '@/lib/logActivity';
 
 export async function GET(request: Request, { params }: { params: { boardId: string } }) {
   try {
@@ -11,7 +12,7 @@ export async function GET(request: Request, { params }: { params: { boardId: str
 
     const columns = await prisma.column.findMany({
       where: { boardId },
-      include: { cards: true }, // Include cards if necessary
+      include: { cards: true }, 
     });
 
     return NextResponse.json(columns, { status: 200 });
@@ -37,6 +38,8 @@ export async function POST(request: Request, { params }: { params: { boardId: st
         boardId,
       },
     });
+
+    await logActivity("created column", `created list "${name}"`, boardId, newColumn.id);
 
     return NextResponse.json(newColumn, { status: 201 });
   } catch (error) {
