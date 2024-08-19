@@ -39,12 +39,12 @@ const Modal: React.FC<ModalProps> = ({ task, columnName, onClose, onSave, onDele
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h2>{task.content}</h2>
+        <h2>Edit Task</h2>
         <p>In list: {columnName}</p>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder="Add a more detailed description..."
+          placeholder="Edit the task content..."
           style={{ width: '100%', height: '100px', marginBottom: '10px' }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>

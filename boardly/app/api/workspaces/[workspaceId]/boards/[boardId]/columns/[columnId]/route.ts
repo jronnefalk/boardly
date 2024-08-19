@@ -7,7 +7,7 @@ export async function GET(request: Request, { params }: { params: { columnId: st
 
     const column = await prisma.column.findUnique({
       where: { id: columnId },
-      include: { cards: true }, // Include cards if necessary
+      include: { cards: true }, 
     });
 
     if (!column) {
@@ -24,18 +24,19 @@ export async function GET(request: Request, { params }: { params: { columnId: st
 export async function PATCH(request: Request, { params }: { params: { columnId: string } }) {
   try {
     const { columnId } = params;
-    const { name, position } = await request.json();
+    const { position, name } = await request.json();
 
-    if (!name) {
-      return NextResponse.json({ error: 'Column name is required' }, { status: 400 });
+    const updateData: any = {};
+    if (position !== undefined) {
+      updateData.position = position;
+    }
+    if (name) {
+      updateData.name = name;
     }
 
     const updatedColumn = await prisma.column.update({
       where: { id: columnId },
-      data: {
-        name,
-        position,
-      },
+      data: updateData,
     });
 
     return NextResponse.json(updatedColumn, { status: 200 });
@@ -49,12 +50,10 @@ export async function DELETE(request: Request, { params }: { params: { columnId:
   try {
     const { columnId } = params;
 
-    // First, delete all cards related to this column
     await prisma.card.deleteMany({
       where: { columnId },
     });
 
-    // Then, delete the column itself
     await prisma.column.delete({
       where: { id: columnId },
     });

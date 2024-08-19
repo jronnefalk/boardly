@@ -54,17 +54,12 @@ export async function GET(request: Request, { params }: { params: { columnId: st
 
 export async function DELETE(request: Request) {
   try {
-    // Extract cardId and columnId from request body
     const { cardId } = await request.json();
 
     if (!cardId) {
       return NextResponse.json({ error: 'Card ID is required' }, { status: 400 });
     }
 
-    // Log to verify the cardId is correct
-    console.log("Deleting card with ID:", cardId);
-
-    // Perform the deletion
     await prisma.card.delete({
       where: { id: cardId },
     });
@@ -72,5 +67,28 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ message: 'Card deleted successfully' }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: 'Error deleting card' }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: Request, { params }: { params: { columnId: string } }) {
+  try {
+    const { cardId, newColumnId, newPosition } = await request.json();
+
+    if (!cardId || !newColumnId) {
+      return NextResponse.json({ error: 'Card ID and new column ID are required' }, { status: 400 });
+    }
+
+    const updatedCard = await prisma.card.update({
+      where: { id: cardId },
+      data: {
+        columnId: newColumnId,
+        position: newPosition,
+      },
+    });
+
+    return NextResponse.json(updatedCard, { status: 200 });
+  } catch (error) {
+    console.error('Error moving card:', error);
+    return NextResponse.json({ error: 'Error moving card' }, { status: 500 });
   }
 }
