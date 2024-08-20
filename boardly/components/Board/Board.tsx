@@ -40,13 +40,27 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId }) => {
 
     socketInstance.on('message2', (data) => {
       console.log('Received from server:', data);
-      // Handle the real-time update logic here
+      if (data.newColumnOrder) {
+        setColumnOrder(data.newColumnOrder);
+    }
+
+    if (data.newColumn) {
+        setColumns((prevColumns) => ({
+            ...prevColumns,
+            [data.newColumn.id]: {
+                id: data.newColumn.id,
+                name: data.newColumn.name,
+                items: [],
+            },
+        }));
+        setColumnOrder((prevOrder) => [...prevOrder, data.newColumn.id]);
+    }
     });
 
     return () => {
       socketInstance.disconnect();
     };
-  }, []);
+  }, [boardId]);
 
   useEffect(() => {
     const fetchColumns = async () => {
