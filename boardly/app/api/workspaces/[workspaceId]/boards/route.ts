@@ -18,7 +18,6 @@ export async function POST(request: Request, { params }: { params: { workspaceId
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Find the user in the database to ensure you have the correct ObjectID
         const dbUser = await prisma.user.findUnique({
             where: { email: user.email },
         });
@@ -30,7 +29,7 @@ export async function POST(request: Request, { params }: { params: { workspaceId
         const workspaceUser = await prisma.userWorkspace.findFirst({
             where: {
                 workspaceId,
-                userId: dbUser.id,  // Use the correct MongoDB ObjectID
+                userId: dbUser.id,  
             },
         });
 
@@ -75,17 +74,14 @@ export async function GET(request: Request, { params }: { params: { workspaceId:
 
 export async function DELETE(request: Request) {
     try {
-        // Extract boardId from request body
         const { boardId } = await request.json();
 
         if (!boardId) {
             return NextResponse.json({ error: "Board ID is required" }, { status: 400 });
         }
 
-        // Log to verify the boardId is correct
         console.log("Deleting board with ID:", boardId);
 
-        // Perform the deletion
         await prisma.board.delete({
             where: { id: boardId },
         });

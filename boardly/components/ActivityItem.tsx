@@ -2,7 +2,6 @@ import { format } from "date-fns";
 import { Activity } from "@prisma/client";
 import { generateLogMessage } from "@/lib/generateLogMessage";
 
-// Define a custom type that includes the user relationship
 interface ActivityWithUser extends Activity {
   user: {
     email: string;

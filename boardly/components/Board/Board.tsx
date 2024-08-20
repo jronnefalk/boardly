@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import Modal from '../Modal';
+import { io, Socket } from 'socket.io-client';
 
 export interface Task {
   id: string;
@@ -31,6 +32,21 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId }) => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [selectedColumnId, setSelectedColumnId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [socket, setSocket] = useState<Socket | null>(null);
+
+  useEffect(() => {
+    const socketInstance = io('http://localhost:3000');
+    setSocket(socketInstance);
+
+    socketInstance.on('message2', (data) => {
+      console.log('Received from server:', data);
+      // Handle the real-time update logic here
+    });
+
+    return () => {
+      socketInstance.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     const fetchColumns = async () => {
@@ -104,6 +120,11 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId }) => {
       });
       setColumnOrder([...columnOrder, newColumn.id]);
       setNewColumnName(''); // Clear the input field after adding
+
+      // Emit an event to the server for the new column
+      if (socket) {
+        socket.emit('message1', { boardId, newColumn });
+            }
     } catch (error) {
       console.error('Error adding column:', error);
     }
@@ -232,6 +253,10 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId }) => {
             },
             body: JSON.stringify({ position: i }), // Update the position in the backend
           });
+        }
+        // Emit an event to the server for the column reorder
+        if (socket) {
+          socket.emit('message1', { boardId, newColumnOrder });
         }
       } catch (error) {
         console.error('Error saving column order:', error);

@@ -4,7 +4,7 @@ import { getUserInfo } from "@/lib/auth";
 export async function logActivity(
   action: string,
   description: string,
-  workspaceId: string,  // Make this a required parameter
+  workspaceId: string, 
   boardId?: string,
   columnId?: string,
   cardId?: string
@@ -23,7 +23,6 @@ export async function logActivity(
     throw new Error("User not found");
   }
 
-  // Fetch boardId if it's not provided but columnId or cardId is provided
   if (!boardId && columnId) {
     const column = await prisma.column.findUnique({
       where: { id: columnId },
@@ -46,7 +45,7 @@ export async function logActivity(
       boardId,
       columnId,
       cardId,
-      workspaceId,  // Save the workspaceId here
+      workspaceId, 
     },
   });
 }

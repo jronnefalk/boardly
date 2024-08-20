@@ -5,13 +5,12 @@ export async function GET(request: Request, { params }: { params: { workspaceId:
   try {
     const { workspaceId } = params;
 
-    // Fetch activities directly linked to the workspace
     const activities = await prisma.activity.findMany({
       where: {
-        workspaceId,  // Directly filter by workspaceId
+        workspaceId,  
       },
       include: {
-        user: true,  // Ensure we include the user details
+        user: true, 
       },
       orderBy: {
         createdAt: "desc",
