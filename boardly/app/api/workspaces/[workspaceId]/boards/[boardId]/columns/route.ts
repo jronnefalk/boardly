@@ -22,10 +22,10 @@ export async function GET(request: Request, { params }: { params: { boardId: str
   }
 }
 
-export async function POST(request: Request, { params }: { params: { boardId: string } }) {
+export async function POST(request: Request, { params }: { params: { boardId: string, workspaceId: string } }) {
   try {
     const { name, position } = await request.json();
-    const { boardId } = params;
+    const { boardId, workspaceId } = params;
 
     if (!name || !position) {
       return NextResponse.json({ error: 'Name and position are required' }, { status: 400 });
@@ -39,8 +39,13 @@ export async function POST(request: Request, { params }: { params: { boardId: st
       },
     });
 
-    await logActivity("created column", `created list "${name}"`, boardId, newColumn.id);
-
+    await logActivity(
+      "created column", 
+      `created list "${name}"`, 
+      workspaceId,  
+      boardId,     
+      newColumn.id  
+    );
     return NextResponse.json(newColumn, { status: 201 });
   } catch (error) {
     console.error('Error creating column:', error);

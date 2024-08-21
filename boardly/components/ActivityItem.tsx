@@ -1,12 +1,5 @@
 import { format } from "date-fns";
-import { Activity } from "@prisma/client";
-import { generateLogMessage } from "@/lib/generateLogMessage";
-
-interface ActivityWithUser extends Activity {
-  user: {
-    email: string;
-  };
-}
+import { ActivityWithUser } from "@/lib/types";
 
 interface ActivityItemProps {
   data: ActivityWithUser;
@@ -14,13 +7,17 @@ interface ActivityItemProps {
 
 export const ActivityItem = ({ data }: ActivityItemProps) => {
   return (
-    <li className="flex items-center gap-x-2">
+    <li className="flex flex-col gap-y-2 mb-3">
       <div className="flex flex-col space-y-0.5">
         <p className="text-sm text-muted-foreground">
           <span className="font-semibold lowercase text-neutral-700">
             {data.user.email}
           </span>{" "}
-          {generateLogMessage(data)}
+          {data.action}: "{data.description}"
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {data.workspaceName && <span>In: {data.workspaceName}</span>}
+          {data.boardName && <span> / {data.boardName}</span>}
         </p>
         <p className="text-xs text-muted-foreground">
           {format(new Date(data.createdAt), "MMM d, yyyy 'at' h:mm a")}

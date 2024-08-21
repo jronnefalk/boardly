@@ -23,29 +23,54 @@ export async function logActivity(
     throw new Error("User not found");
   }
 
-  if (!boardId && columnId) {
+  const workspace = await prisma.workspace.findUnique({
+    where: { id: workspaceId },
+  });
+  
+  let workspaceName = workspace ? workspace.name : null;
+  let correctBoardId = boardId || null;
+  let boardName = null;
+
+  if (!correctBoardId && columnId) {
     const column = await prisma.column.findUnique({
       where: { id: columnId },
       include: { board: true },
     });
-    boardId = column?.boardId;
-  } else if (!boardId && cardId) {
+    if (column?.board) {
+      correctBoardId = column.boardId;
+      boardName = column.board.title;
+    }
+  } else if (!correctBoardId && cardId) {
     const card = await prisma.card.findUnique({
       where: { id: cardId },
       include: { column: { include: { board: true } } },
     });
-    boardId = card?.column.boardId;
+    if (card?.column?.board) {
+      correctBoardId = card.column.boardId;
+      boardName = card.column.board.title;
+    }
+  } else if (correctBoardId) {
+    const board = await prisma.board.findUnique({
+      where: { id: correctBoardId },
+    });
+    if (board) {
+      boardName = board.title;
+    }
   }
+
+  console.log(`Correct Board ID: ${correctBoardId}, Board Name: ${boardName}`);
 
   await prisma.activity.create({
     data: {
       action,
       description,
       userId: dbUser.id,
-      boardId,
+      workspaceId, 
+      boardId: correctBoardId, 
       columnId,
       cardId,
-      workspaceId, 
     },
   });
+
+  return { workspaceName, boardName }; 
 }

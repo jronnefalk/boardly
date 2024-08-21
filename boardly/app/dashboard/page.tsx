@@ -9,6 +9,7 @@ import { Poppins } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import AddUserButton from '@/components/addUserButton';
 import ChangeUserRoleButton from '@/components/changeUserRoleButton';
+import DashboardActivityFeed from '@/components/DashboardActivityFeed';
 import { toast } from 'sonner';
 
 const textFont = Poppins({
@@ -32,7 +33,7 @@ interface Workspace {
 export default function DashboardPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const selectedWorkspaceId = searchParams.get('workspaceId') ?? '';
+  const selectedWorkspaceId = searchParams?.get('workspaceId') ?? '';
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [userName, setUserName] = useState('');
   const [currentWorkspaceId, setCurrentWorkspaceId] = useState(selectedWorkspaceId);
@@ -77,7 +78,7 @@ export default function DashboardPage() {
   
       if (response.ok) {
         setWorkspaces((prev) => prev.filter((ws) => ws.id !== currentWorkspaceId));
-        setCurrentWorkspaceId(workspaces.length > 1 ? workspaces[0]?.id : ''); // Switch to another workspace or clear the selection
+        setCurrentWorkspaceId(workspaces.length > 1 ? workspaces[0]?.id : '');
         toast.success('Workspace deleted successfully!');
         router.push('/dashboard');
       } else {
@@ -93,14 +94,17 @@ export default function DashboardPage() {
   
 
   const handleAddWorkspace = (newWorkspace: Workspace) => {
+    const { id, name } = newWorkspace;
     setWorkspaces((prev) => [...prev, newWorkspace]);
-    setCurrentWorkspaceId(newWorkspace.id);
-    router.push(`/dashboard?workspaceId=${newWorkspace.id}`);  
+    setCurrentWorkspaceId(id);
+    router.push(`/dashboard?workspaceId=${id}`);  
   };
 
   return (
     <div className="flex flex-col items-center">
       <h2 className={cn('text-4xl mb-4 text-black', textFont.className)}>Welcome, {userName}!</h2>
+
+      <DashboardActivityFeed />
 
       {workspaces.length > 0 && (
         <Select onValueChange={handleWorkspaceSwitch} defaultValue={currentWorkspaceId}>
@@ -118,7 +122,7 @@ export default function DashboardPage() {
       )}
 
       <div className="flex space-x-2 mt-4">
-        <CreateWorkspaceButton onWorkspaceCreated={handleAddWorkspace} />
+        <CreateWorkspaceButton onWorkspaceCreated={(ws) => handleAddWorkspace({ id: ws.id, name: ws.name, users: [] })} />
         {currentWorkspaceId && (
           <Button onClick={handleDeleteWorkspace} variant="destructive">
             Delete Workspace

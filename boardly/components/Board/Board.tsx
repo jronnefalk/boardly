@@ -48,7 +48,7 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
         socket.emit('mouseMove', {
           x: event.clientX,
           y: event.clientY,
-          userId: userId,  // Use the userId here
+          userId: userId, 
         });
       }
     };
@@ -63,7 +63,6 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
   useEffect(() => {
     if (socket) {
       socket.on('mouseMove', (data: { x: number; y: number; userId: string }) => {
-        // Update the state with the other user's mouse position
         setOtherUsersMousePositions(prev => ({
           ...prev,
           [data.userId]: { x: data.x, y: data.y },

@@ -63,24 +63,22 @@ model Card {
 }
 
 model Activity {
-  id          String   @id @default(cuid()) @map("_id")
+  id          String     @id @default(cuid()) @map("_id")
   action      String
   description String
-  createdAt   DateTime @default(now())
+  createdAt   DateTime   @default(now())
   userId      String   
   boardId     String?  
   columnId    String?  
   cardId      String?  
-  workspaceId String  // Add this line
+  workspaceId String  
 
-  user        User     @relation(fields: [userId], references: [id])
-  board       Board?   @relation(fields: [boardId], references: [id])
-  column      Column?  @relation(fields: [columnId], references: [id])
-  card        Card?    @relation(fields: [cardId], references: [id])
-  workspace   Workspace @relation(fields: [workspaceId], references: [id]) 
+  user        User       @relation(fields: [userId], references: [id])
+  board       Board?     @relation(fields: [boardId], references: [id])
+  column      Column?    @relation(fields: [columnId], references: [id])
+  card        Card?      @relation(fields: [cardId], references: [id])
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id]) 
 }
-
-
 
 enum Role {
   ADMIN

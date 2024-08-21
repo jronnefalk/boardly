@@ -15,8 +15,8 @@ interface BoardData {
 
 export default function BoardsPage() {
   const router = useRouter();
-  const { workspaceId } = useParams<{ workspaceId: string }>();
-  const [boards, setBoards] = useState<BoardData[]>([]);
+  const params = useParams<{ workspaceId: string }>();
+  const workspaceId = params?.workspaceId;  const [boards, setBoards] = useState<BoardData[]>([]);
   const [newBoardTitle, setNewBoardTitle] = useState('');
   const [selectedBoardId, setSelectedBoardId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null); 
@@ -33,7 +33,7 @@ export default function BoardsPage() {
         const response = await fetch('/api/userinfo');
         const data = await response.json();
         setUserId(data.user?.id || null);
-        console.log("Fetched userId:", data.user?.id); // Log the userId fetched
+        console.log("Fetched userId:", data.user?.id); 
       } catch (error) {
         console.error("Error fetching user info:", error);
       }
@@ -92,7 +92,7 @@ export default function BoardsPage() {
 
   useEffect(() => {
     console.log("Selected Board ID:", selectedBoardId);
-    console.log("User ID:", userId); // Log the userId before passing to Board
+    console.log("User ID:", userId); 
   }, [selectedBoardId, userId]);
 
   return (
@@ -123,8 +123,8 @@ export default function BoardsPage() {
         ))}
       </ul>
 
-      {selectedBoardId && userId && (
-        <Board workspaceId={workspaceId} boardId={selectedBoardId} userId={userId} />
+      {selectedBoardId && userId && workspaceId && (
+      <Board workspaceId={workspaceId || ''} boardId={selectedBoardId} userId={userId} />
       )}
     </div>
   );

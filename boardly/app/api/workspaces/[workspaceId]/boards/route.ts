@@ -44,8 +44,13 @@ export async function POST(request: Request, { params }: { params: { workspaceId
             },
         });
 
-        await logActivity("created board", `created board "${title}"`, newBoard.id);
-
+        await logActivity(
+            "created board", 
+            `created board "${title}"`, 
+            workspaceId, 
+            newBoard.id 
+          );
+          
         return NextResponse.json({ board: newBoard }, { status: 201 });
     } catch (error: any) {
         console.error("Error creating board:", error);

@@ -27,7 +27,14 @@ export async function POST(request: Request, { params }: { params: { columnId: s
       },
     });
 
-    await logActivity("created card", `created card "${content}"`, workspaceId, columnId, newCard.id);
+    await logActivity(
+      "created card", 
+      `created card "${content}"`, 
+      workspaceId, 
+      boardId,     
+      columnId,    
+      newCard.id    
+    );
 
     return NextResponse.json(newCard, { status: 201 });
   } catch (error) {

@@ -3,25 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { ActivityList } from '@/components/ActivityList';
-
-interface ActivityWithUser {
-  id: string;
-  action: string;
-  description: string;
-  createdAt: Date;
-  userId: string;
-  boardId: string | null;
-  columnId: string | null;
-  cardId: string | null;
-  workspaceId: string;  
-  user: {
-    email: string;
-  };
-}
+import { ActivityWithUser } from '@/lib/types';
 
 const ActivityPage = () => {
   const [activities, setActivities] = useState<ActivityWithUser[]>([]);
-  const { workspaceId } = useParams();
+  const params = useParams() as { workspaceId: string }; 
+  const { workspaceId } = params;
 
   useEffect(() => {
     const fetchActivities = async () => {
