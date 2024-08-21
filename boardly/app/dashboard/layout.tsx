@@ -3,7 +3,7 @@ import Sidebar from "@/components/Sidebar";
 import { Poppins } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import prisma from "@/lib/prisma"; 
+import prisma from "@/lib/prisma";
 
 const textFont = Poppins({
     subsets: ["latin"],
@@ -19,7 +19,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
         return <div>Unauthorized</div>; 
     }
 
-    // Fetch workspaces where the user is a member
     const workspaces = await prisma.workspace.findMany({
         where: {
             users: {
@@ -34,14 +33,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
             users: true, 
         },
     });
-    
 
     return (
-        <div className={cn("min-h-screen flex")}>
+        <div className={cn("min-h-screen flex bg-gray-50")}>
             <Sidebar workspaces={workspaces} currentWorkspaceId={workspaces[0]?.id} />
-            <div className={cn("min-h-screen flex flex-col", textFont.className)}>
+            <div className={cn("flex-grow flex flex-col", textFont.className)}>
                 <Navbar /> 
-                <div className="flex-grow flex items-center justify-center flex-col pt-16">
+                <div className="flex-grow flex flex-col pt-16">
                     {children}
                 </div>
             </div>

@@ -10,7 +10,6 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Update the positions of the pinned items
     for (let i = 0; i < orderedIds.length; i++) {
         await prisma.pinnedItem.update({
             where: { id: orderedIds[i] },

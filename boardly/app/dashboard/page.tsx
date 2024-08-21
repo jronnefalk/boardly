@@ -13,6 +13,7 @@ import DashboardActivityFeed from '@/components/DashboardActivityFeed';
 import { toast } from 'sonner';
 import { PinnedSection } from './PinnedSection';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card } from '@/components/ui/card';
 
 const textFont = Poppins({
   subsets: ['latin'],
@@ -67,6 +68,17 @@ export default function DashboardPage() {
     fetchUserInfo();
   }, []);
 
+  const getGreeting = () => {
+    const currentHour = new Date().getHours();
+    if (currentHour < 12) {
+      return 'Good Morning';
+    } else if (currentHour < 18) {
+      return 'Good Afternoon';
+    } else {
+      return 'Good Evening';
+    }
+  };
+
   const handleWorkspaceSwitch = (workspaceId: string) => {
     setCurrentWorkspaceId(workspaceId);
     router.push(`/dashboard?workspaceId=${workspaceId}`);
@@ -111,61 +123,72 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="flex flex-col items-center">
-      <h2 className={cn('text-4xl mb-4 text-black', textFont.className)}>
-        {loading ? <Skeleton className="w-[200px] h-[40px] rounded" /> : `Welcome, ${userName}!`}
-      </h2>
-      <PinnedSection />
-      <DashboardActivityFeed />
+    <div className="bg-gray-50 min-h-screen">
+      <div className="p-8 max-w-screen-xl mx-auto">
+        {/* Welcome Section */}
+        <div className="mb-6 p-6 bg-white rounded-lg shadow-md flex justify-between items-center">
+          <div>
+            <h1 className={cn('text-4xl font-bold mb-2', textFont.className)}>
+              {loading ? <Skeleton className="w-[300px] h-[40px] rounded" /> : `${getGreeting()}, ${userName}!`}
+            </h1>
+            <div className="text-gray-600">
+              {loading ? <Skeleton className="w-[250px] h-[20px] rounded" /> : 'Manage your tasks and projects efficiently.'}
+            </div>
+          </div>
+          {/* Optional illustration */}
+          <div className="hidden md:block">
+            <div className="h-44 w-44">
+              {loading ? (
+                <Skeleton className="w-full h-full rounded" />
+              ) : (
+                <img src="dashboard-illustration.svg" alt="Dashboard Illustration" className="h-full w-full" />
+              )}
+            </div>
+          </div>
+        </div>
 
-      {loading ? (
-        <Skeleton className="w-[200px] h-[40px] rounded mt-4" />
-      ) : (
-        workspaces.length > 0 && (
-          <Select onValueChange={handleWorkspaceSwitch} defaultValue={currentWorkspaceId}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Select a workspace" />
-            </SelectTrigger>
-            <SelectContent>
-              {workspaces.map((ws) => (
-                <SelectItem key={ws.id} value={ws.id}>
-                  {ws.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )
-      )}
+        {/* Pinned Workspaces Section */}
+        <PinnedSection />
 
-      <div className="flex space-x-2 mt-4">
-        <CreateWorkspaceButton onWorkspaceCreated={(ws) => handleAddWorkspace({ id: ws.id, name: ws.name, users: [] })} />
-        {currentWorkspaceId && (
-          <Button onClick={handleDeleteWorkspace} variant="destructive">
-            Delete Workspace
-          </Button>
+        {/* Recent Activity Section */}
+        <DashboardActivityFeed />
+
+        {/* Quick Actions Section */}
+        <Card className="w-full mt-6 p-6 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+          <CreateWorkspaceButton onWorkspaceCreated={(ws) => handleAddWorkspace({ id: ws.id, name: ws.name, users: [] })} />
+          {currentWorkspaceId && (
+            <>
+              <Button onClick={handleDeleteWorkspace} variant="destructive">
+                Delete Workspace
+              </Button>
+              <AddUserButton workspaceId={currentWorkspaceId} />
+            </>
+          )}
+        </Card>
+
+        {/* Workspace Selection */}
+        {loading ? (
+          <Skeleton className="w-[200px] h-[40px] rounded mt-4" />
+        ) : (
+          workspaces.length > 0 && (
+            <Select onValueChange={handleWorkspaceSwitch} defaultValue={currentWorkspaceId}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Select a workspace" />
+              </SelectTrigger>
+              <SelectContent>
+                {workspaces.map((ws) => (
+                  <SelectItem key={ws.id} value={ws.id}>
+                    {ws.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )
         )}
+
+        {/* Error Message */}
+        {errorMessage && <div className="mt-4 text-red-600">{errorMessage}</div>}
       </div>
-
-      {currentWorkspaceId && (
-        <div className="flex space-x-2 mt-4">
-          <AddUserButton workspaceId={currentWorkspaceId} />
-        </div>
-      )}
-
-      {currentWorkspaceId && (
-        <div className="flex flex-col space-y-2 mt-4">
-          {workspaces.find((ws) => ws.id === currentWorkspaceId)?.users?.map((userWorkspace) => (
-            <ChangeUserRoleButton
-              key={userWorkspace.user.id}
-              workspaceId={currentWorkspaceId}
-              userId={userWorkspace.user.id}
-              currentRole={userWorkspace.role}
-            />
-          ))}
-        </div>
-      )}
-
-      {errorMessage && <div className="mt-4 text-red-600">{errorMessage}</div>}
     </div>
   );
 }
