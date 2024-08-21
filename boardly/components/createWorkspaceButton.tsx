@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
@@ -15,7 +14,6 @@ interface CreateWorkspaceButtonProps {
 export default function CreateWorkspaceButton({ onWorkspaceCreated }: CreateWorkspaceButtonProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [workspaceName, setWorkspaceName] = useState('');
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const router = useRouter();
 
   const handleCreateWorkspace = async () => {
@@ -35,7 +33,6 @@ export default function CreateWorkspaceButton({ onWorkspaceCreated }: CreateWork
         toast.success('Workspace created successfully!');
         onWorkspaceCreated(data.workspace); 
         router.push(`/dashboard?workspaceId=${data.workspace.id}`);
-        setIsPopoverOpen(false);
       } else {
         toast.error(data.error || 'Failed to create workspace');
       }
@@ -47,24 +44,17 @@ export default function CreateWorkspaceButton({ onWorkspaceCreated }: CreateWork
   };
 
   return (
-    <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-      <PopoverTrigger asChild>
-        <Button onClick={() => setIsPopoverOpen(true)}>Create Workspace</Button>
-      </PopoverTrigger>
-      <PopoverContent align="start">
-        <div className="flex flex-col space-y-2">
-          <Label htmlFor="workspace-name">Workspace Name</Label>
-          <Input
-            id="workspace-name"
-            placeholder="Workspace Name"
-            value={workspaceName}
-            onChange={(e) => setWorkspaceName(e.target.value)}
-          />
-          <Button onClick={handleCreateWorkspace} disabled={isCreating}>
-            {isCreating ? 'Creating...' : 'Create'}
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
+    <div className="flex flex-col space-y-2">
+      <Label htmlFor="workspace-name">Workspace Name</Label>
+      <Input
+        id="workspace-name"
+        placeholder="Workspace Name"
+        value={workspaceName}
+        onChange={(e) => setWorkspaceName(e.target.value)}
+      />
+      <Button onClick={handleCreateWorkspace} disabled={isCreating}>
+        {isCreating ? 'Creating...' : 'Create'}
+      </Button>
+    </div>
   );
 }
