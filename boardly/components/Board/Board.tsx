@@ -20,12 +20,18 @@ interface Columns {
   [key: string]: Column;
 }
 
-interface BoardProps {
-  boardId: string;
-  workspaceId: string;
+interface MousePosition {
+  x: number;
+  y: number;
 }
 
-const Board: React.FC<BoardProps> = ({ boardId, workspaceId }) => {
+interface BoardProps {
+  workspaceId: string;
+  boardId: string;
+  userId: string; 
+}
+
+const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
   const [columns, setColumns] = useState<Columns>({});
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
   const [newColumnName, setNewColumnName] = useState<string>('');
@@ -33,6 +39,38 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId }) => {
   const [selectedColumnId, setSelectedColumnId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [socket, setSocket] = useState<Socket | null>(null);
+  const [otherUsersMousePositions, setOtherUsersMousePositions] = useState<{ [key: string]: MousePosition }>({});
+  
+  
+  useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => {
+      if (socket) {
+        socket.emit('mouseMove', {
+          x: event.clientX,
+          y: event.clientY,
+          userId: userId,  // Use the userId here
+        });
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [socket, userId]); 
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('mouseMove', (data: { x: number; y: number; userId: string }) => {
+        // Update the state with the other user's mouse position
+        setOtherUsersMousePositions(prev => ({
+          ...prev,
+          [data.userId]: { x: data.x, y: data.y },
+        }));
+      });
+    }
+  }, [socket]);
 
   useEffect(() => {
     const socketInstance = io('http://localhost:3000');
@@ -417,7 +455,7 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId }) => {
               <div {...provided.droppableProps} ref={provided.innerRef} style={{ display: 'flex' }}>
                 {columnOrder.map((columnId, index) => {
                   const column = columns[columnId];
-
+  
                   return (
                     <Draggable draggableId={columnId} index={index} key={columnId}>
                       {(provided) => (
@@ -550,7 +588,27 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId }) => {
             )}
           </Droppable>
         </DragDropContext>
+  
+        {/* Render other users' cursors */}
+        {Object.keys(otherUsersMousePositions).map((userId) => (
+          <div
+            key={userId}
+            style={{
+              position: 'absolute',
+              left: `${otherUsersMousePositions[userId].x}px`,
+              top: `${otherUsersMousePositions[userId].y}px`,
+              pointerEvents: 'none',
+              backgroundColor: 'red',
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+            }}
+          >
+            {/* Optionally, add a user label or icon */}
+          </div>
+        ))}
       </div>
+  
       {isModalOpen && selectedTask && (
         <Modal
           task={selectedTask}
@@ -563,7 +621,6 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId }) => {
       )}
     </div>
   );
-};
-
+}
 
 export default Board;

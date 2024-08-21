@@ -20,10 +20,28 @@ app.prepare().then(() => {
       io.emit('message2', data);
     });
 
+    socket.on('mouseMove', (data: any) => {
+      socket.broadcast.emit('mouseMove', data);
+    });
+  
+    socket.on('disconnect', () => {
+      console.log('Client disconnected');
+    });
+
+  });
+
+  io.on('connection', (socket: Socket) => {
+    console.log('Client connected');
+  
+    socket.on('mouseMove', (data: any) => {
+      socket.broadcast.emit('mouseMove', data);
+    });
+  
     socket.on('disconnect', () => {
       console.log('Client disconnected');
     });
   });
+  
 
   server.all('*', (req: Request, res: Response) => {
     return handle(req, res);

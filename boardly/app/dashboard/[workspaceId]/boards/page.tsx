@@ -19,16 +19,29 @@ export default function BoardsPage() {
   const [boards, setBoards] = useState<BoardData[]>([]);
   const [newBoardTitle, setNewBoardTitle] = useState('');
   const [selectedBoardId, setSelectedBoardId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null); 
 
   useEffect(() => {
-    console.log("Fetching boards for workspaceId:", workspaceId);
     async function fetchBoards() {
       const response = await fetch(`/api/workspaces/${workspaceId}/boards`);
       const data = await response.json();
       setBoards(data.boards);
     }
 
+    async function fetchUserId() {
+      try {
+        const response = await fetch('/api/userinfo');
+        const data = await response.json();
+        setUserId(data.user?.id || null);
+        console.log("Fetched userId:", data.user?.id); // Log the userId fetched
+      } catch (error) {
+        console.error("Error fetching user info:", error);
+      }
+    }
+
+
     fetchBoards();
+    fetchUserId();
   }, [workspaceId]);
 
   const handleCreateBoard = async () => {
@@ -77,6 +90,11 @@ export default function BoardsPage() {
     setSelectedBoardId(boardId);
   };
 
+  useEffect(() => {
+    console.log("Selected Board ID:", selectedBoardId);
+    console.log("User ID:", userId); // Log the userId before passing to Board
+  }, [selectedBoardId, userId]);
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">Boards</h1>
@@ -105,8 +123,8 @@ export default function BoardsPage() {
         ))}
       </ul>
 
-      {selectedBoardId && (
-        <Board workspaceId={workspaceId} boardId={selectedBoardId} />
+      {selectedBoardId && userId && (
+        <Board workspaceId={workspaceId} boardId={selectedBoardId} userId={userId} />
       )}
     </div>
   );
