@@ -5,6 +5,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { DragDropContext, Draggable, Droppable, DropResult } from "react-beautiful-dnd";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface PinnedItem {
   id: string;
@@ -19,6 +20,7 @@ interface Workspace {
 }
 
 export const PinnedSection: React.FC = () => {
+  const [loading, setLoading] = useState(true);
   const [pinnedItems, setPinnedItems] = useState<PinnedItem[]>([]);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [selectedWorkspace, setSelectedWorkspace] = useState<string | null>(null);
@@ -28,6 +30,7 @@ export const PinnedSection: React.FC = () => {
       const response = await fetch("/api/pinned");
       const data = await response.json();
       setPinnedItems(data.pinnedItems);
+      setLoading(false);
     };
 
     const fetchWorkspaces = async () => {
@@ -91,6 +94,7 @@ export const PinnedSection: React.FC = () => {
   return (
     <div className="pinned-section mb-6">
       <h2 className="text-lg font-semibold mb-4">Pinned Workspaces</h2>
+
       <DragDropContext onDragEnd={handleReorder}>
         <Droppable droppableId="pinned-items" direction="horizontal">
           {(provided) => (
@@ -99,38 +103,43 @@ export const PinnedSection: React.FC = () => {
               ref={provided.innerRef}
               className="flex space-x-4 overflow-x-auto"
             >
-              {pinnedItems.map((item, index) => (
-              <Draggable key={item.id} draggableId={item.id} index={index}>
-                {(provided) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.draggableProps}
-                    {...provided.dragHandleProps}
-                    className="min-w-[250px]"
-                  >
-                    <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-xl font-bold">{item.title}</CardTitle>
-                        {item.workspaceName && (
-                          <CardDescription className="text-sm text-gray-500">
-                            {item.workspaceName}
-                          </CardDescription>
-                        )}
-                      </CardHeader>
-                      <CardContent>
-                        <Button
-                          onClick={() => handleUnpin(item.id)}
-                          variant="destructive"
-                          className="w-full mt-2"
+              {loading && pinnedItems.length === 0
+                ? 
+                  Array.from({ length: 3 }).map((_, index) => (
+                    <Skeleton key={index} className="w-[200px] h-[100px] rounded-md" />
+                  ))
+                : pinnedItems.map((item, index) => (
+                    <Draggable key={item.id} draggableId={item.id} index={index}>
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          className="min-w-[250px]"
                         >
-                          Unpin
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
-              </Draggable>
-            ))}
+                          <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-xl font-bold">{item.title}</CardTitle>
+                              {item.workspaceName && (
+                                <CardDescription className="text-sm text-gray-500">
+                                  {item.workspaceName}
+                                </CardDescription>
+                              )}
+                            </CardHeader>
+                            <CardContent>
+                              <Button
+                                onClick={() => handleUnpin(item.id)}
+                                variant="destructive"
+                                className="w-full mt-2"
+                              >
+                                Unpin
+                              </Button>
+                            </CardContent>
+                          </Card>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
               {provided.placeholder}
             </div>
           )}

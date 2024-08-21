@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityItem } from './ActivityItem';
 import { ActivityWithUser } from '@/lib/types';
+import { Skeleton } from './ui/skeleton';
+import { ScrollArea } from './ui/scroll-area';
 
 const DashboardActivityFeed: React.FC = () => {
   const [activities, setActivities] = useState<ActivityWithUser[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchRecentActivities = async () => {
@@ -13,6 +16,8 @@ const DashboardActivityFeed: React.FC = () => {
         setActivities(data.activities || []);
       } catch (error) {
         console.error('Error fetching recent activities:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -20,17 +25,23 @@ const DashboardActivityFeed: React.FC = () => {
   }, []);
 
   return (
-    <div className="p-4 bg-white rounded shadow max-h-96 overflow-y-auto"> 
+    <div className="p-4 bg-white rounded shadow">
       <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
-      <ul>
-        {activities.length > 0 ? (
-          activities.map((activity) => (
-            <ActivityItem key={activity.id} data={activity} />
-          ))
-        ) : (
-          <p>No recent activities found.</p>
-        )}
-      </ul>
+      <ScrollArea className="h-72">
+        <ul>
+          {loading ? (
+            Array.from({ length: 3 }).map((_, index) => (
+              <Skeleton key={index} className="w-full h-[20px] rounded-md mb-2" />
+            ))
+          ) : activities.length > 0 ? (
+            activities.map((activity) => (
+              <ActivityItem key={activity.id} data={activity} />
+            ))
+          ) : (
+            <p>No recent activities found.</p>
+          )}
+        </ul>
+      </ScrollArea>
     </div>
   );
 };

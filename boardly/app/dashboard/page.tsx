@@ -12,6 +12,7 @@ import ChangeUserRoleButton from '@/components/changeUserRoleButton';
 import DashboardActivityFeed from '@/components/DashboardActivityFeed';
 import { toast } from 'sonner';
 import { PinnedSection } from './PinnedSection';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const textFont = Poppins({
   subsets: ['latin'],
@@ -39,6 +40,7 @@ export default function DashboardPage() {
   const [userName, setUserName] = useState<string | null>(null);
   const [currentWorkspaceId, setCurrentWorkspaceId] = useState(selectedWorkspaceId);
   const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchUserInfo() {
@@ -57,6 +59,8 @@ export default function DashboardPage() {
       } catch (error) {
         console.error('Failed to fetch user info:', error);
         setErrorMessage('Failed to fetch user info');
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -109,25 +113,28 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col items-center">
       <h2 className={cn('text-4xl mb-4 text-black', textFont.className)}>
-        Welcome, {userName || 'Loading...'}!
+        {loading ? <Skeleton className="w-[200px] h-[40px] rounded" /> : `Welcome, ${userName}!`}
       </h2>
       <PinnedSection />
       <DashboardActivityFeed />
-      
 
-      {workspaces.length > 0 && (
-        <Select onValueChange={handleWorkspaceSwitch} defaultValue={currentWorkspaceId}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Select a workspace" />
-          </SelectTrigger>
-          <SelectContent>
-            {workspaces.map((ws) => (
-              <SelectItem key={ws.id} value={ws.id}>
-                {ws.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      {loading ? (
+        <Skeleton className="w-[200px] h-[40px] rounded mt-4" />
+      ) : (
+        workspaces.length > 0 && (
+          <Select onValueChange={handleWorkspaceSwitch} defaultValue={currentWorkspaceId}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Select a workspace" />
+            </SelectTrigger>
+            <SelectContent>
+              {workspaces.map((ws) => (
+                <SelectItem key={ws.id} value={ws.id}>
+                  {ws.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )
       )}
 
       <div className="flex space-x-2 mt-4">

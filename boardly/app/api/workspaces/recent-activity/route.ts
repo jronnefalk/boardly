@@ -36,10 +36,9 @@ export async function GET() {
     orderBy: {
       createdAt: 'desc',
     },
-    take: 5, 
+    take: 10, 
   });
 
-  console.log("Fetched activities:", activities);
 
   const activitiesWithNames = activities.map(activity => ({
     ...activity,
