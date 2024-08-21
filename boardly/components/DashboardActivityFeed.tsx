@@ -20,7 +20,7 @@ const DashboardActivityFeed: React.FC = () => {
   }, []);
 
   return (
-    <div className="p-4 bg-white rounded shadow">
+    <div className="p-4 bg-white rounded shadow max-h-96 overflow-y-auto"> 
       <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
       <ul>
         {activities.length > 0 ? (
@@ -34,5 +34,6 @@ const DashboardActivityFeed: React.FC = () => {
     </div>
   );
 };
+
 
 export default DashboardActivityFeed;

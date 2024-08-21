@@ -35,20 +35,27 @@ export default function DashboardPage() {
   const searchParams = useSearchParams();
   const selectedWorkspaceId = searchParams?.get('workspaceId') ?? '';
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
-  const [userName, setUserName] = useState('');
+  const [userName, setUserName] = useState<string | null>(null);
   const [currentWorkspaceId, setCurrentWorkspaceId] = useState(selectedWorkspaceId);
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     async function fetchUserInfo() {
-      const response = await fetch('/api/userinfo');
-      const { isAuthenticated, user } = await response.json();
+      try {
+        const response = await fetch('/api/userinfo');
+        const { isAuthenticated, user } = await response.json();
 
-      if (isAuthenticated && user) {
-        const userWorkspaces = user.workspaces ?? [];
-        setWorkspaces(userWorkspaces);
-        setUserName(user.given_name ?? 'User');
-        setCurrentWorkspaceId(userWorkspaces[0]?.id ?? '');
+        if (isAuthenticated && user) {
+          const userWorkspaces = user.workspaces ?? [];
+          setWorkspaces(userWorkspaces);
+          setUserName(user.given_name || user.email || 'User');
+          setCurrentWorkspaceId(userWorkspaces[0]?.id ?? '');
+        } else {
+          setErrorMessage('User not authenticated');
+        }
+      } catch (error) {
+        console.error('Failed to fetch user info:', error);
+        setErrorMessage('Failed to fetch user info');
       }
     }
 
@@ -59,23 +66,22 @@ export default function DashboardPage() {
     setCurrentWorkspaceId(workspaceId);
     router.push(`/dashboard?workspaceId=${workspaceId}`);
   };
-  
 
   const handleDeleteWorkspace = async () => {
     if (!currentWorkspaceId) {
       return;
     }
-  
+
     const confirmed = window.confirm('Are you sure you want to delete this workspace?');
     if (!confirmed) {
       return;
     }
-  
+
     try {
       const response = await fetch(`/api/workspaces/${currentWorkspaceId}`, {
         method: 'DELETE',
       });
-  
+
       if (response.ok) {
         setWorkspaces((prev) => prev.filter((ws) => ws.id !== currentWorkspaceId));
         setCurrentWorkspaceId(workspaces.length > 1 ? workspaces[0]?.id : '');
@@ -90,19 +96,20 @@ export default function DashboardPage() {
       setErrorMessage('An unexpected error occurred');
       toast.error('Error deleting workspace: ' + error.message);
     }
-  };  
-  
+  };
 
   const handleAddWorkspace = (newWorkspace: Workspace) => {
     const { id, name } = newWorkspace;
     setWorkspaces((prev) => [...prev, newWorkspace]);
     setCurrentWorkspaceId(id);
-    router.push(`/dashboard?workspaceId=${id}`);  
+    router.push(`/dashboard?workspaceId=${id}`);
   };
 
   return (
     <div className="flex flex-col items-center">
-      <h2 className={cn('text-4xl mb-4 text-black', textFont.className)}>Welcome, {userName}!</h2>
+      <h2 className={cn('text-4xl mb-4 text-black', textFont.className)}>
+        Welcome, {userName || 'Loading...'}!
+      </h2>
 
       <DashboardActivityFeed />
 

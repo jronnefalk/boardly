@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { ActivityWithUser } from "@/lib/types";
+import Link from "next/link";
 
 interface ActivityItemProps {
   data: ActivityWithUser;
@@ -17,7 +18,11 @@ export const ActivityItem = ({ data }: ActivityItemProps) => {
         </p>
         <p className="text-xs text-muted-foreground">
           {data.workspaceName && <span>In: {data.workspaceName}</span>}
-          {data.boardName && <span> / {data.boardName}</span>}
+          {data.boardName && (
+            <Link href={`/dashboard/${data.workspaceId}/boards/${data.boardId}`} className="text-blue-500 hover:underline">
+              {" / "}{data.boardName}
+            </Link>
+          )}
         </p>
         <p className="text-xs text-muted-foreground">
           {format(new Date(data.createdAt), "MMM d, yyyy 'at' h:mm a")}
