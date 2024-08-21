@@ -34,9 +34,20 @@ export async function POST(request: Request) {
       boardId,
       position: (maxPosition._max.position || 0) + 1,
     },
+    include: {
+      workspace: true, 
+      board: true, 
+    },
   });
 
-  return NextResponse.json(newPinnedItem);
+  const formattedItem = {
+    id: newPinnedItem.id,
+    title: newPinnedItem.workspace?.name || newPinnedItem.board?.title || "Untitled",
+    type: newPinnedItem.workspaceId ? "workspace" : "board",
+    workspaceName: newPinnedItem.workspace?.name,
+  };
+
+  return NextResponse.json(formattedItem);
 }
 
 export async function GET() {
