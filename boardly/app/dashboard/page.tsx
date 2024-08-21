@@ -11,6 +11,7 @@ import AddUserButton from '@/components/addUserButton';
 import ChangeUserRoleButton from '@/components/changeUserRoleButton';
 import DashboardActivityFeed from '@/components/DashboardActivityFeed';
 import { toast } from 'sonner';
+import { PinnedSection } from './PinnedSection';
 
 const textFont = Poppins({
   subsets: ['latin'],
@@ -110,8 +111,9 @@ export default function DashboardPage() {
       <h2 className={cn('text-4xl mb-4 text-black', textFont.className)}>
         Welcome, {userName || 'Loading...'}!
       </h2>
-
+      <PinnedSection />
       <DashboardActivityFeed />
+      
 
       {workspaces.length > 0 && (
         <Select onValueChange={handleWorkspaceSwitch} defaultValue={currentWorkspaceId}>

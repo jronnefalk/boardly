@@ -20,10 +20,8 @@ export async function GET() {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  // Fetch all workspace IDs the user is part of
   const workspaceIds = dbUser.workspaces.map(uw => uw.workspaceId);
 
-  // Fetch recent activities for all these workspaces
   const activities = await prisma.activity.findMany({
     where: {
       workspaceId: { in: workspaceIds },
@@ -38,12 +36,11 @@ export async function GET() {
     orderBy: {
       createdAt: 'desc',
     },
-    take: 5, // Limit to the 5 most recent activities
+    take: 5, 
   });
 
   console.log("Fetched activities:", activities);
 
-  // Transform activities to include workspaceName and boardName
   const activitiesWithNames = activities.map(activity => ({
     ...activity,
     workspaceName: activity.workspace?.name,

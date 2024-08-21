@@ -14,6 +14,7 @@ model User {
   lastName  String
   workspaces UserWorkspace[]
   activities Activity[]
+  pinnedItems PinnedItem[]
 }
 
 model Workspace {
@@ -23,6 +24,7 @@ model Workspace {
   users     UserWorkspace[]
   boards    Board[]     
   activities Activity[]
+  pinnedItems PinnedItem[]
 }
 
 model Board {
@@ -32,6 +34,7 @@ model Board {
   workspaceId String     @db.ObjectId
   columns     Column[]  
   activities Activity[]
+  pinnedItems PinnedItem[]
 }
 
 model UserWorkspace {
@@ -79,6 +82,20 @@ model Activity {
   card        Card?      @relation(fields: [cardId], references: [id])
   workspace   Workspace  @relation(fields: [workspaceId], references: [id]) 
 }
+
+model PinnedItem {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   
+  workspaceId String?  
+  boardId     String?  
+  position    Int
+  user        User     @relation(fields: [userId], references: [id])
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id])
+  board       Board?   @relation(fields: [boardId], references: [id])
+
+  @@unique([userId, workspaceId, boardId])
+}
+
 
 enum Role {
   ADMIN

@@ -17,7 +17,6 @@ export async function GET(request: Request, { params }: { params: { workspaceId:
       },
     });
 
-    console.log("Fetched activities in backend:", activities);
 
     return NextResponse.json(activities, { status: 200 });
   } catch (error) {
