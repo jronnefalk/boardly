@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useRouter } from 'next/navigation'; 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -11,6 +12,7 @@ interface PinnedItem {
   title: string;
   type: "workspace" | "board";
   workspaceName?: string;
+  workspaceId: string; 
 }
 
 interface Workspace {
@@ -19,6 +21,7 @@ interface Workspace {
 }
 
 export const PinnedSection: React.FC = () => {
+  const router = useRouter(); 
   const [pinnedItems, setPinnedItems] = useState<PinnedItem[]>([]);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [selectedWorkspace, setSelectedWorkspace] = useState<string | null>(null);
@@ -26,29 +29,46 @@ export const PinnedSection: React.FC = () => {
   useEffect(() => {
     const fetchPinnedItems = async () => {
       const response = await fetch("/api/pinned");
-      const data = await response.json();
+      const data = await response.json();      
       setPinnedItems(data.pinnedItems);
     };
-
+  
     const fetchWorkspaces = async () => {
       const response = await fetch("/api/workspaces");
-      const data = await response.json();
+      const data = await response.json();      
       setWorkspaces(data.workspaces);
     };
-
+  
     fetchPinnedItems();
     fetchWorkspaces();
   }, []);
+  
 
   const handleOpenPopover = () => {
     setSelectedWorkspace(null);
   };
 
-  const handleUnpin = async (id: string) => {
-    await fetch(`/api/pinned/${id}`, { method: "DELETE" });
-    setPinnedItems(pinnedItems.filter((item) => item.id !== id));
-    toast.success("Unpinned successfully!");
+  const handleUnpin = async (id: string, event: React.MouseEvent) => {
+    event.stopPropagation(); 
+    try {
+      console.log("Deleting pinned item with ID:", id);
+      const response = await fetch(`/api/pinned/${id}`, { method: "DELETE" });
+  
+      if (response.ok) {
+        setPinnedItems(pinnedItems.filter((item) => item.id !== id));
+        toast.success("Unpinned successfully!");
+      } else {
+        const errorData = await response.json();
+        console.error("Failed to unpin:", errorData);
+        toast.error(errorData.error || "Failed to unpin");
+      }
+    } catch (error) {
+      console.error("Error while unpinning:", error);
+      toast.error("An error occurred while unpinning the item");
+    }
   };
+  
+
 
   const handleReorder = async (result: DropResult) => {
     if (!result.destination) return;
@@ -68,7 +88,7 @@ export const PinnedSection: React.FC = () => {
 
   const handlePinWorkspace = async () => {
     if (!selectedWorkspace) return;
-
+  
     try {
       const response = await fetch("/api/pinned", {
         method: "POST",
@@ -77,9 +97,9 @@ export const PinnedSection: React.FC = () => {
         },
         body: JSON.stringify({ workspaceId: selectedWorkspace }),
       });
-
+  
       if (response.ok) {
-        const newItem = await response.json();
+        const newItem = await response.json();        
         setPinnedItems([...pinnedItems, newItem]);
         toast.success("Workspace pinned successfully!");
       } else {
@@ -91,6 +111,18 @@ export const PinnedSection: React.FC = () => {
       toast.error("An unexpected error occurred");
     }
   };
+  
+
+  const handleCardClick = (item: PinnedItem) => {
+      if (item.type === "workspace") {
+      console.log("Redirecting to workspace:", item.workspaceId); 
+      router.push(`/dashboard/${item.workspaceId}/boards`);
+    } else if (item.type === "board") {
+      console.log("Redirecting to board:", item.workspaceId, item.id);
+      router.push(`/dashboard/${item.workspaceId}/boards/${item.id}`);
+    }
+  };
+  
 
   return (
     <div className="pinned-section mb-6">
@@ -157,38 +189,67 @@ export const PinnedSection: React.FC = () => {
                     <div
                       ref={provided.innerRef}
                       {...provided.draggableProps}
-                      {...provided.dragHandleProps}
-                      className="min-w-[250px]"
+                      className="min-w-[250px] cursor-pointer"
+                      onClick={() => handleCardClick(item)} 
                     >
                       <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out relative">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-xl font-bold">{item.title}</CardTitle>
-                          {item.workspaceName && (
-                            <CardDescription className="text-sm text-gray-500">
-                              {item.workspaceName}
-                            </CardDescription>
-                          )}
+                        <CardHeader className="pb-2 flex justify-between items-start">
+                          <div>
+                            <CardTitle className="text-xl font-bold">{item.title}</CardTitle>
+                            {item.workspaceName && (
+                              <CardDescription className="text-sm text-gray-500">
+                                {item.workspaceName}
+                              </CardDescription>
+                            )}
+                          </div>
+                          {/* Unpin and drag buttons */}
+                          <div className="flex space-x-2">
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button
+                                  className="text-gray-600 hover:text-black"
+                                  onClick={(e) => e.stopPropagation()} 
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                  </svg>
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent align="end" className="p-2 w-auto text-sm">
+                                <Button
+                                  onClick={(e) => handleUnpin(item.id, e)}
+                                  variant="destructive"
+                                  className="w-full text-xs py-1 px-2"
+                                >
+                                  Unpin
+                                </Button>
+                              </PopoverContent>
+                            </Popover>
+
+                            <button
+                              {...provided.dragHandleProps}
+                              className="text-gray-600 hover:text-black cursor-grab"
+                              onClick={(e) => e.stopPropagation()} 
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth="1.5"
+                                stroke="currentColor"
+                                className="w-5 h-5"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+                                />
+                              </svg>
+                            </button>
+                          </div>
                         </CardHeader>
                         <CardContent>
-                          {/* Unpin button inside popover */}
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <button className="absolute top-2 right-2 text-gray-600 hover:text-black">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                </svg>
-                              </button>
-                            </PopoverTrigger>
-                            <PopoverContent align="end" className="p-2 w-auto text-sm">
-                              <Button
-                                onClick={() => handleUnpin(item.id)}
-                                variant="destructive"
-                                className="w-full text-xs py-1 px-2"
-                              >
-                                Unpin
-                              </Button>
-                            </PopoverContent>
-                          </Popover>
+                          {/* Add any additional card content here */}
                         </CardContent>
                       </Card>
                     </div>
@@ -201,6 +262,5 @@ export const PinnedSection: React.FC = () => {
         </Droppable>
       </DragDropContext>
     </div>
-  );  
-  
+  );
 };

@@ -71,7 +71,9 @@ export async function GET() {
     title: item.workspace?.name || item.board?.title || "Untitled",
     type: item.workspaceId ? "workspace" : "board",
     workspaceName: item.workspace?.name,
+    workspaceId: item.workspaceId || item.board?.workspaceId,
   }));
-
+  
   return NextResponse.json({ pinnedItems: formattedItems });
+  
 }
