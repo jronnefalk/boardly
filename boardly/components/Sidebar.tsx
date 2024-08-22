@@ -119,12 +119,12 @@ const Sidebar: React.FC<SidebarProps> = ({ workspaces: initialWorkspaces }) => {
                   </Link>
                 </li>
                 <li>
-                  <Link href={`/dashboard/${workspace.id}/settings`}>
+                  <Link href="/dashboard/settings">
                     <div className="flex items-center text-sm text-gray-700 p-2 hover:bg-gray-50 rounded-lg">
                       <SettingsIcon />
                       <span
                         className={`ml-2 ${
-                          pathname === `/dashboard/${workspace.id}/settings` ? 'bg-gray-100 font-medium' : ''
+                            pathname === '/dashboard/settings' ? 'bg-gray-100 font-medium' : ''
                         }`}
                       >
                         Settings
