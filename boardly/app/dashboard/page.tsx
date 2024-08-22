@@ -125,7 +125,6 @@ export default function DashboardPage() {
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="p-8 max-w-screen-xl mx-auto">
-        {/* Welcome Section */}
         <div className="mb-6 p-6 bg-white rounded-lg shadow-md flex justify-between items-center">
           <div>
             <h1 className={cn('text-4xl font-bold mb-2', textFont.className)}>
@@ -135,7 +134,6 @@ export default function DashboardPage() {
               {loading ? <Skeleton className="w-[250px] h-[20px] rounded" /> : 'Manage your tasks and projects efficiently.'}
             </div>
           </div>
-          {/* Optional illustration */}
           <div className="hidden md:block">
             <div className="h-44 w-44">
               {loading ? (
@@ -147,46 +145,9 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Pinned Workspaces Section */}
         <PinnedSection />
-
-        {/* Recent Activity Section */}
         <DashboardActivityFeed />
 
-        {/* Quick Actions Section */}
-        <Card className="w-full mt-6 p-6 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
-          <CreateWorkspaceButton onWorkspaceCreated={(ws) => handleAddWorkspace({ id: ws.id, name: ws.name, users: [] })} />
-          {currentWorkspaceId && (
-            <>
-              <Button onClick={handleDeleteWorkspace} variant="destructive">
-                Delete Workspace
-              </Button>
-              <AddUserButton workspaceId={currentWorkspaceId} />
-            </>
-          )}
-        </Card>
-
-        {/* Workspace Selection */}
-        {loading ? (
-          <Skeleton className="w-[200px] h-[40px] rounded mt-4" />
-        ) : (
-          workspaces.length > 0 && (
-            <Select onValueChange={handleWorkspaceSwitch} defaultValue={currentWorkspaceId}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Select a workspace" />
-              </SelectTrigger>
-              <SelectContent>
-                {workspaces.map((ws) => (
-                  <SelectItem key={ws.id} value={ws.id}>
-                    {ws.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )
-        )}
-
-        {/* Error Message */}
         {errorMessage && <div className="mt-4 text-red-600">{errorMessage}</div>}
       </div>
     </div>
