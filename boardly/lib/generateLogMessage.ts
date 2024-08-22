@@ -5,16 +5,16 @@ export const generateLogMessage = (activity: Activity) => {
 
   switch (action) {
     case "created card":
-      return `created a card: "${description}"`;
+      return `"${description}"`;
     case "created column":
-      return `created a column: "${description}"`;
+      return `"${description}"`;
     case "created board":
-      return `created a board: "${description}"`;
+      return `"${description}"`;
     case "updated card":
-      return `updated the card: "${description}"`;
+      return `"${description}"`;
     case "deleted card":
-      return `deleted the card: "${description}"`;
+      return `"${description}"`;
     default:
-      return `performed an action: "${description}"`;
+      return `"${description}"`;
   }
 };
