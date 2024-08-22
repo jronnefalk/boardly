@@ -6,7 +6,6 @@ export async function PATCH(request: Request) {
     const { orderedIds } = await request.json();
 
     try {
-        // Iterate over orderedIds and update each pinned item's position
         for (let i = 0; i < orderedIds.length; i++) {
             const id = orderedIds[i];
             await prisma.pinnedItem.update({

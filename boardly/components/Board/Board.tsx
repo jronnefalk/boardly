@@ -219,9 +219,6 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
           name: newName,
         },
       }));
-      if (socket) {
-        socket.emit('clientColumnMoved', { boardId, columnId, newName });
-      }
     } catch (error) {
       console.error('Error renaming column:', error);
     }
