@@ -32,7 +32,6 @@ export default function CreateWorkspaceButton({ onWorkspaceCreated }: CreateWork
       if (response.ok) {
         toast.success('Workspace created successfully!');
         onWorkspaceCreated(data.workspace); 
-        router.push(`/dashboard?workspaceId=${data.workspace.id}`);
       } else {
         toast.error(data.error || 'Failed to create workspace');
       }

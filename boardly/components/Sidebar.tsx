@@ -9,19 +9,11 @@ import CreateWorkspaceButton from '@/components/createWorkspaceButton';
 import BoardIcon from '@/components/icons/BoardIcon';
 import ActivityIcon from '@/components/icons/ActivityIcon';
 import SettingsIcon from '@/components/icons/SettingsIcon';
+import { useWorkspace } from '@/components/WorkspaceContext';
 
-interface Workspace {
-  id: string;
-  name: string;
-}
-
-interface SidebarProps {
-  workspaces: Workspace[];
-}
-
-const Sidebar: React.FC<SidebarProps> = ({ workspaces: initialWorkspaces }) => {
+const Sidebar: React.FC = () => {
   const pathname = usePathname();
-  const [workspaces, setWorkspaces] = useState<Workspace[]>(initialWorkspaces); // Use state to manage workspaces
+  const { workspaces, addWorkspace, removeWorkspace } = useWorkspace(); // Use context
   const [expandedWorkspaces, setExpandedWorkspaces] = useState<Set<string>>(new Set());
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
 
@@ -35,8 +27,8 @@ const Sidebar: React.FC<SidebarProps> = ({ workspaces: initialWorkspaces }) => {
     setExpandedWorkspaces(newExpandedWorkspaces);
   };
 
-  const handleWorkspaceCreated = (newWorkspace: Workspace) => {
-    setWorkspaces(prevWorkspaces => [...prevWorkspaces, newWorkspace]);
+  const handleWorkspaceCreated = (newWorkspace: { id: string; name: string }) => {
+    addWorkspace(newWorkspace);
     setSelectedWorkspaceId(newWorkspace.id);
   };
 
@@ -124,7 +116,7 @@ const Sidebar: React.FC<SidebarProps> = ({ workspaces: initialWorkspaces }) => {
                       <SettingsIcon />
                       <span
                         className={`ml-2 ${
-                            pathname === '/dashboard/settings' ? 'bg-gray-100 font-medium' : ''
+                          pathname === '/dashboard/settings' ? 'bg-gray-100 font-medium' : ''
                         }`}
                       >
                         Settings
