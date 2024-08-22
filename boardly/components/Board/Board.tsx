@@ -154,37 +154,30 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
 
     const newColumnPosition = columnOrder.length + 1;
     try {
-      const response = await fetch(`/api/workspaces/${workspaceId}/boards/${boardId}/columns`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name: newColumnName, position: newColumnPosition }),
-      });
+        const response = await fetch(`/api/workspaces/${workspaceId}/boards/${boardId}/columns`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name: newColumnName, position: newColumnPosition }),
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to create column');
-      }
+        if (!response.ok) {
+            throw new Error('Failed to create column');
+        }
 
-      const newColumn = await response.json();
-      setColumns({
-        ...columns,
-        [newColumn.id]: {
-          id: newColumn.id,
-          name: newColumn.name,
-          items: [],
-        },
-      });
-      setColumnOrder([...columnOrder, newColumn.id]);
-      setNewColumnName(''); 
+        const newColumn = await response.json();
+        setNewColumnName(''); // Clear the input field after adding
 
-      if (socket) {
-        socket.emit('message1', { boardId, newColumn });
-      }
+        // Do not update the state here. Let the socket event handle it.
+        if (socket) {
+            socket.emit('message1', { boardId, newColumn });
+        }
     } catch (error) {
-      console.error('Error adding column:', error);
+        console.error('Error adding column:', error);
     }
-  };
+};
+
 
   const openRenameDialog = (columnId: string, currentName: string) => {
     setColumnToRename(columnId);
