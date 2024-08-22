@@ -15,8 +15,8 @@ export async function GET(request: Request, { params }: { params: { workspaceId:
       orderBy: {
         createdAt: "desc",
       },
+      take: 20, 
     });
-
 
     return NextResponse.json(activities, { status: 200 });
   } catch (error) {

@@ -6,7 +6,6 @@ import Board from '@/components/board/Board';
 
 const BoardPage = () => {
   const params = useParams<{ workspaceId: string; boardId: string }>();
-
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
