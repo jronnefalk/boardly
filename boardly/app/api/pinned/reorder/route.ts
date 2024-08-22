@@ -4,18 +4,20 @@ import { getUserInfo } from '@/lib/auth';
 
 export async function PATCH(request: Request) {
     const { orderedIds } = await request.json();
-    const { user } = await getUserInfo();
 
-    if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    try {
+        // Iterate over orderedIds and update each pinned item's position
+        for (let i = 0; i < orderedIds.length; i++) {
+            const id = orderedIds[i];
+            await prisma.pinnedItem.update({
+                where: { id: id },
+                data: { position: i + 1 },
+            });
+        }
+
+        return NextResponse.json({ message: 'Reordered successfully' });
+    } catch (error) {
+        console.error("Error reordering pinned items:", error);
+        return NextResponse.json({ error: 'Failed to reorder pinned items' }, { status: 500 });
     }
-
-    for (let i = 0; i < orderedIds.length; i++) {
-        await prisma.pinnedItem.update({
-            where: { id: orderedIds[i] },
-            data: { position: i + 1 },
-        });
-    }
-
-    return NextResponse.json({ message: 'Reordered successfully' });
 }

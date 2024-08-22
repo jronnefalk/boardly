@@ -24,7 +24,9 @@ export const PinnedSection: React.FC = () => {
   const router = useRouter(); 
   const [pinnedItems, setPinnedItems] = useState<PinnedItem[]>([]);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
-  const [selectedWorkspace, setSelectedWorkspace] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<{ workspaceId: string; boardId?: string | null }>({ workspaceId: '', boardId: null });
+  const [boardsByWorkspace, setBoardsByWorkspace] = useState<{ [workspaceId: string]: PinnedItem[] }>({});
+  const [hoveredWorkspaceId, setHoveredWorkspaceId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPinnedItems = async () => {
@@ -42,16 +44,32 @@ export const PinnedSection: React.FC = () => {
     fetchPinnedItems();
     fetchWorkspaces();
   }, []);
+
+  const handleWorkspaceHover = async (workspaceId: string) => {
+    setHoveredWorkspaceId(workspaceId);
   
+    if (!boardsByWorkspace[workspaceId]) {
+      try {
+        const response = await fetch(`/api/workspaces/${workspaceId}/boards`);
+        const data = await response.json();
+        setBoardsByWorkspace(prev => ({
+          ...prev,
+          [workspaceId]: data.boards,
+        }));
+      } catch (error) {
+        console.error("Error fetching boards:", error);
+      }
+    }
+  };
 
   const handleOpenPopover = () => {
-    setSelectedWorkspace(null);
+    setSelectedItem({ workspaceId: '', boardId: null });
+    setHoveredWorkspaceId(null);
   };
 
   const handleUnpin = async (id: string, event: React.MouseEvent) => {
     event.stopPropagation(); 
     try {
-      console.log("Deleting pinned item with ID:", id);
       const response = await fetch(`/api/pinned/${id}`, { method: "DELETE" });
   
       if (response.ok) {
@@ -59,35 +77,33 @@ export const PinnedSection: React.FC = () => {
         toast.success("Unpinned successfully!");
       } else {
         const errorData = await response.json();
-        console.error("Failed to unpin:", errorData);
         toast.error(errorData.error || "Failed to unpin");
       }
     } catch (error) {
-      console.error("Error while unpinning:", error);
       toast.error("An error occurred while unpinning the item");
     }
   };
-  
-
 
   const handleReorder = async (result: DropResult) => {
     if (!result.destination) return;
 
-    const items = Array.from(pinnedItems);
-    const [movedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, movedItem);
+    const reorderedItems = Array.from(pinnedItems);
+    const [movedItem] = reorderedItems.splice(result.source.index, 1);
+    reorderedItems.splice(result.destination.index, 0, movedItem);
 
-    setPinnedItems(items);
+    setPinnedItems(reorderedItems);
 
     await fetch("/api/pinned/reorder", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderedIds: items.map((item) => item.id) }),
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderedIds: reorderedItems.map(item => item.id) }),
     });
-  };
+};
 
-  const handlePinWorkspace = async () => {
-    if (!selectedWorkspace) return;
+
+
+  const handlePinWorkspaceOrBoard = async () => {
+    if (!selectedItem.workspaceId) return;
   
     try {
       const response = await fetch("/api/pinned", {
@@ -95,30 +111,30 @@ export const PinnedSection: React.FC = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ workspaceId: selectedWorkspace }),
+        body: JSON.stringify({
+          workspaceId: selectedItem.workspaceId,
+          boardId: selectedItem.boardId || undefined,
+        }),
       });
   
       if (response.ok) {
-        const newItem = await response.json();        
+        const newItem = await response.json();
         setPinnedItems([...pinnedItems, newItem]);
-        toast.success("Workspace pinned successfully!");
+        toast.success("Workspace or board pinned successfully!");
       } else {
         const errorData = await response.json();
-        toast.error(errorData.error || "Failed to pin workspace");
+        toast.error(errorData.error || "Failed to pin item");
       }
     } catch (error) {
-      console.error("Error pinning workspace:", error);
       toast.error("An unexpected error occurred");
     }
   };
   
 
   const handleCardClick = (item: PinnedItem) => {
-      if (item.type === "workspace") {
-      console.log("Redirecting to workspace:", item.workspaceId); 
+    if (item.type === "workspace") {
       router.push(`/dashboard/${item.workspaceId}/boards`);
     } else if (item.type === "board") {
-      console.log("Redirecting to board:", item.workspaceId, item.id);
       router.push(`/dashboard/${item.workspaceId}/boards/${item.id}`);
     }
   };
@@ -127,7 +143,7 @@ export const PinnedSection: React.FC = () => {
   return (
     <div className="pinned-section mb-6">
       <h2 className="text-lg font-semibold mb-4 flex items-center">
-        Pinned Workspaces
+        Pinned workspaces and boards
         <Popover>
           <PopoverTrigger asChild onClick={handleOpenPopover}>
             <Button variant="ghost" size="icon" className="ml-2">
@@ -147,26 +163,46 @@ export const PinnedSection: React.FC = () => {
               </svg>
             </Button>
           </PopoverTrigger>
-          <PopoverContent align="start" className="w-48 p-2">
+          <PopoverContent align="start" className="w-64 p-2">
             <ul className="space-y-1">
               {workspaces.map((workspace) => (
                 <li key={workspace.id}>
-                  <Button
-                    onClick={() => setSelectedWorkspace(workspace.id)}
+                  <div
+                    onMouseEnter={() => handleWorkspaceHover(workspace.id)}
+                    onClick={() => setSelectedItem({ workspaceId: workspace.id, boardId: null })}
                     className={cn(
                       "block w-full text-left px-4 py-2 rounded-md transition-colors duration-200",
-                      selectedWorkspace === workspace.id
+                      selectedItem.workspaceId === workspace.id && !selectedItem.boardId
                         ? "bg-gray-800 text-white"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900"
                     )}
                   >
                     {workspace.name}
-                  </Button>
+                  </div>
+                  {hoveredWorkspaceId === workspace.id && boardsByWorkspace[workspace.id] && (
+                    <ul className="pl-4 mt-2 space-y-1">
+                      {boardsByWorkspace[workspace.id].map(board => (
+                        <li key={board.id}>
+                          <Button
+                            onClick={() => setSelectedItem({ workspaceId: workspace.id, boardId: board.id })}
+                            className={cn(
+                              "block w-full text-left px-4 py-2 rounded-md transition-colors duration-200",
+                              selectedItem.boardId === board.id
+                                ? "bg-gray-800 text-white"
+                                : "bg-gray-50 hover:bg-gray-100"
+                            )}
+                          >
+                            {board.title}
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </li>
               ))}
             </ul>
             <Button
-              onClick={handlePinWorkspace}
+              onClick={handlePinWorkspaceOrBoard}
               className="w-full mt-4 text-sm py-2 px-4 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-200"
             >
               Confirm Pin
@@ -202,7 +238,6 @@ export const PinnedSection: React.FC = () => {
                               </CardDescription>
                             )}
                           </div>
-                          {/* Unpin and drag buttons */}
                           <div className="flex space-x-2">
                             <Popover>
                               <PopoverTrigger asChild>
@@ -225,7 +260,6 @@ export const PinnedSection: React.FC = () => {
                                 </Button>
                               </PopoverContent>
                             </Popover>
-
                             <button
                               {...provided.dragHandleProps}
                               className="text-gray-600 hover:text-black cursor-grab"
@@ -248,9 +282,6 @@ export const PinnedSection: React.FC = () => {
                             </button>
                           </div>
                         </CardHeader>
-                        <CardContent>
-                          {/* Add any additional card content here */}
-                        </CardContent>
                       </Card>
                     </div>
                   )}
