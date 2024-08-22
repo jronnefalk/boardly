@@ -1,12 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import Modal from '../Modal';
 import { io, Socket } from 'socket.io-client';
 import AddIcon from '../icons/AddIcon';
-import DotsIcon from '../icons/DotsIcon';
 import TaskCard from './TaskCard';
 import { Button } from '../ui/button';
 
@@ -41,14 +38,44 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
   const [columns, setColumns] = useState<Columns>({});
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
   const [newColumnName, setNewColumnName] = useState<string>('');
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [selectedColumnId, setSelectedColumnId] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [otherUsersMousePositions, setOtherUsersMousePositions] = useState<{ [key: string]: MousePosition }>({});
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [columnToRename, setColumnToRename] = useState<string | null>(null);
+
+  useEffect(() => {
+    const socketInstance = io('http://localhost:3000');
+    setSocket(socketInstance);
   
+    socketInstance.on('mouseMove', (data: { x: number; y: number; userId: string }) => {
+      setOtherUsersMousePositions((prev) => ({
+        ...prev,
+        [data.userId]: { x: data.x, y: data.y },
+      }));
+    });
+  
+    socketInstance.on('message2', (data) => {
+      console.log('Received from server:', data);
+      if (data.newColumnOrder) {
+        setColumnOrder(data.newColumnOrder);
+      }
+      if (data.newColumn) {
+        setColumns((prevColumns) => ({
+          ...prevColumns,
+          [data.newColumn.id]: {
+            id: data.newColumn.id,
+            name: data.newColumn.name,
+            items: [],
+          },
+        }));
+        setColumnOrder((prevOrder) => [...prevOrder, data.newColumn.id]);
+      }
+    });
+  
+    return () => {
+      socketInstance.disconnect();
+    };
+  }, [boardId]);
   
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
@@ -56,7 +83,7 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
         socket.emit('mouseMove', {
           x: event.clientX,
           y: event.clientY,
-          userId: userId, 
+          userId: userId,  
         });
       }
     };
@@ -68,62 +95,24 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
     };
   }, [socket, userId]); 
 
-  useEffect(() => {
-    if (socket) {
-      socket.on('mouseMove', (data: { x: number; y: number; userId: string }) => {
-        setOtherUsersMousePositions(prev => ({
-          ...prev,
-          [data.userId]: { x: data.x, y: data.y },
-        }));
-      });
-    }
-  }, [socket]);
-
-  useEffect(() => {
-    const socketInstance = io('http://localhost:3000');
-    setSocket(socketInstance);
-
-    socketInstance.on('message2', (data) => {
-      console.log('Received from server:', data);
-      if (data.newColumnOrder) {
-        setColumnOrder(data.newColumnOrder);
-    }
-
-    if (data.newColumn) {
-        setColumns((prevColumns) => ({
-            ...prevColumns,
-            [data.newColumn.id]: {
-                id: data.newColumn.id,
-                name: data.newColumn.name,
-                items: [],
-            },
-        }));
-        setColumnOrder((prevOrder) => [...prevOrder, data.newColumn.id]);
-    }
-    });
-
-    return () => {
-      socketInstance.disconnect();
-    };
-  }, [boardId]);
 
   useEffect(() => {
     const fetchColumns = async () => {
       try {
         const response = await fetch(`/api/workspaces/${workspaceId}/boards/${boardId}/columns`);
         const data = await response.json();
-    
+
         if (data.length === 0) {
           setColumns({});
           setColumnOrder([]);
           return;
         }
-    
+
         data.sort((a: any, b: any) => a.position - b.position);
-    
+
         const columnsData: Columns = {};
         const columnIds: string[] = [];
-    
+
         data.forEach((column: any) => {
           columnsData[column.id] = {
             id: column.id,
@@ -136,59 +125,69 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
           };
           columnIds.push(column.id);
         });
-    
+
         setColumns(columnsData);
         setColumnOrder(columnIds);
       } catch (error) {
         console.error('Error fetching columns:', error);
       }
-    };    
-  
+    };
+
     if (boardId) {
       fetchColumns();
     }
   }, [boardId, workspaceId]);
-  
+
   const addColumn = async () => {
-    if (!newColumnName.trim()) return; 
+    if (!newColumnName.trim()) return;
 
     const newColumnPosition = columnOrder.length + 1;
+
     try {
-        const response = await fetch(`/api/workspaces/${workspaceId}/boards/${boardId}/columns`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ name: newColumnName, position: newColumnPosition }),
-        });
+      const response = await fetch(`/api/workspaces/${workspaceId}/boards/${boardId}/columns`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: newColumnName, position: newColumnPosition }),
+      });
 
-        if (!response.ok) {
-            throw new Error('Failed to create column');
-        }
+      if (!response.ok) {
+        throw new Error('Failed to create column');
+      }
 
-        const newColumn = await response.json();
-        setNewColumnName(''); 
+      const newColumn = await response.json();
+      setColumns((prevColumns) => ({
+        ...prevColumns,
+        [newColumn.id]: {
+          id: newColumn.id,
+          name: newColumn.name,
+          items: [],
+        },
+      }));
+      setColumnOrder((prevOrder) => [...prevOrder, newColumn.id]);
+      setNewColumnName('');
 
-        if (socket) {
-            socket.emit('message1', { boardId, newColumn });
-        }
+      console.log('Emitting message1 event:', { boardId, newColumn });
+      if (socket) {
+        socket.emit('message1', { boardId, newColumn });
+      }
     } catch (error) {
-        console.error('Error adding column:', error);
+      console.error('Error adding column:', error);
     }
-};
-
+  };
 
   const openRenameDialog = (columnId: string, currentName: string) => {
     setColumnToRename(columnId);
     setNewColumnName(currentName);
     setIsRenameDialogOpen(true);
-};
+  };
 
   const handleRenameColumn = async () => {
-      if (columnToRename && newColumnName.trim()) {
-          await renameColumn(columnToRename, newColumnName);
-          setIsRenameDialogOpen(false);
-      }
+    if (columnToRename && newColumnName.trim()) {
+      await renameColumn(columnToRename, newColumnName);
+      setIsRenameDialogOpen(false);
+    }
   };
 
   const renameColumn = async (columnId: string, newName: string) => {
@@ -205,13 +204,13 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
         throw new Error('Failed to rename column');
       }
 
-      setColumns({
-        ...columns,
+      setColumns((prevColumns) => ({
+        ...prevColumns,
         [columnId]: {
-          ...columns[columnId],
+          ...prevColumns[columnId],
           name: newName,
         },
-      });
+      }));
     } catch (error) {
       console.error('Error renaming column:', error);
     }
@@ -227,6 +226,10 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
       delete newColumns[columnId];
       setColumns(newColumns);
       setColumnOrder(columnOrder.filter((id) => id !== columnId));
+
+      if (socket) {
+        socket.emit('columnDeleted', { boardId, columnId, newColumnOrder: columnOrder.filter((id) => id !== columnId) });
+      }
     } catch (error) {
       console.error('Error deleting column:', error);
     }
@@ -253,18 +256,18 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
 
       const newCard = await response.json();
 
-      setColumns({
-        ...columns,
+      setColumns((prevColumns) => ({
+        ...prevColumns,
         [columnId]: {
-          ...columns[columnId],
-          items: [...columns[columnId].items, newCard],
+          ...prevColumns[columnId],
+          items: [...prevColumns[columnId].items, newCard],
         },
-      });
+      }));
     } catch (error) {
       console.error('Error adding card:', error);
     }
   };
-  
+
   const deleteCard = async (columnId: string, cardId: string) => {
     try {
       const response = await fetch(`/api/workspaces/${workspaceId}/boards/${boardId}/columns/${columnId}/cards`, {
@@ -272,149 +275,26 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ cardId }), 
+        body: JSON.stringify({ cardId }),
       });
-  
+
       if (!response.ok) {
         throw new Error('Failed to delete card');
       }
-  
-      setColumns({
-        ...columns,
+
+      setColumns((prevColumns) => ({
+        ...prevColumns,
         [columnId]: {
-          ...columns[columnId],
-          items: columns[columnId].items.filter((item) => item.id !== cardId),
+          ...prevColumns[columnId],
+          items: prevColumns[columnId].items.filter((item) => item.id !== cardId),
         },
-      });
+      }));
+
+      if (socket) {
+        socket.emit('cardDeleted', { boardId, columnId, cardId });
+      }
     } catch (error) {
       console.error('Error deleting card:', error);
-    }
-  };  
-  
-
-  const onDragEnd = async (result: DropResult) => {
-    const { source, destination, type } = result;
-  
-    if (!destination) return;
-  
-    if (type === 'COLUMN') {
-      const newColumnOrder = Array.from(columnOrder);
-      const [movedColumnId] = newColumnOrder.splice(source.index, 1);
-      newColumnOrder.splice(destination.index, 0, movedColumnId);
-      setColumnOrder(newColumnOrder);
-  
-      // Update the position of all columns after the move
-      try {
-        for (let i = 0; i < newColumnOrder.length; i++) {
-          const columnId = newColumnOrder[i];
-          await fetch(`/api/workspaces/${workspaceId}/boards/${boardId}/columns/${columnId}`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ position: i }), // Update the position in the backend
-          });
-        }
-        // Emit an event to the server for the column reorder
-        if (socket) {
-          socket.emit('message1', { boardId, newColumnOrder });
-        }
-      } catch (error) {
-        console.error('Error saving column order:', error);
-      }
-    } else {
-      const sourceColumn = columns[source.droppableId];
-      const destColumn = columns[destination.droppableId];
-  
-      const sourceItems = Array.from(sourceColumn.items);
-      const [movedItem] = sourceItems.splice(source.index, 1);
-  
-      if (source.droppableId !== destination.droppableId) {
-        const destItems = Array.from(destColumn.items);
-        destItems.splice(destination.index, 0, movedItem);
-  
-        setColumns({
-          ...columns,
-          [source.droppableId]: { ...sourceColumn, items: sourceItems },
-          [destination.droppableId]: { ...destColumn, items: destItems },
-        });
-  
-        // Persist card movement to the backend
-        try {
-          await fetch(`/api/workspaces/${workspaceId}/boards/${boardId}/columns/${source.droppableId}/cards/${movedItem.id}`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              newColumnId: destination.droppableId,
-              newPosition: destination.index,
-            }),
-          });
-        } catch (error) {
-          console.error('Error saving card position:', error);
-        }
-      } else {
-        sourceItems.splice(destination.index, 0, movedItem);
-        setColumns({
-          ...columns,
-          [source.droppableId]: { ...sourceColumn, items: sourceItems },
-        });
-  
-        // Persist card reorder to the backend
-        try {
-          await fetch(`/api/workspaces/${workspaceId}/boards/${boardId}/columns/${source.droppableId}/cards/${movedItem.id}`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ position: destination.index }),
-          });
-        } catch (error) {
-          console.error('Error saving card reorder:', error);
-        }
-      }
-    }
-  };
-  
-
-  const openModal = (task: Task, columnId: string) => {
-    setSelectedTask(task);
-    setSelectedColumnId(columnId);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setSelectedTask(null);
-    setSelectedColumnId(null);
-    setIsModalOpen(false);
-  };
-
-  const saveTaskContent = async (content: string) => {
-    if (selectedTask && selectedColumnId) {
-      try {
-        const response = await fetch(`/api/workspaces/${workspaceId}/boards/${boardId}/columns/${selectedColumnId}/cards/${selectedTask.id}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ content }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to save task content');
-        }
-
-        const updatedColumns = { ...columns };
-        const column = updatedColumns[selectedColumnId];
-        const taskIndex = column.items.findIndex((item) => item.id === selectedTask.id);
-        column.items[taskIndex].content = content;
-
-        setColumns(updatedColumns);
-        closeModal();
-      } catch (error) {
-        console.error('Error saving task content:', error);
-      }
     }
   };
 
@@ -477,10 +357,102 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
       console.error('Error renaming task:', error);
     }
   };
-  
+
+  const onDragEnd = async (result: DropResult) => {
+    const { source, destination, type } = result;
+
+    if (!destination) return;
+
+    if (type === 'COLUMN') {
+      const newColumnOrder = Array.from(columnOrder);
+      const [movedColumnId] = newColumnOrder.splice(source.index, 1);
+      newColumnOrder.splice(destination.index, 0, movedColumnId);
+      setColumnOrder(newColumnOrder);
+
+      // Update the position of all columns after the move
+      try {
+        for (let i = 0; i < newColumnOrder.length; i++) {
+          const columnId = newColumnOrder[i];
+          await fetch(`/api/workspaces/${workspaceId}/boards/${boardId}/columns/${columnId}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ position: i }),
+          });
+        }
+        // Emit an event to the server for the column reorder
+        if (socket) {
+          socket.emit('columnMoved', { boardId, newColumnOrder });
+        }
+      } catch (error) {
+        console.error('Error saving column order:', error);
+      }
+    } else {
+      const sourceColumn = columns[source.droppableId];
+      const destColumn = columns[destination.droppableId];
+
+      const sourceItems = Array.from(sourceColumn.items);
+      const [movedItem] = sourceItems.splice(source.index, 1);
+
+      if (source.droppableId !== destination.droppableId) {
+        const destItems = Array.from(destColumn.items);
+        destItems.splice(destination.index, 0, movedItem);
+
+        setColumns({
+          ...columns,
+          [source.droppableId]: { ...sourceColumn, items: sourceItems },
+          [destination.droppableId]: { ...destColumn, items: destItems },
+        });
+
+        // Persist card movement to the backend
+        try {
+          await fetch(`/api/workspaces/${workspaceId}/boards/${boardId}/columns/${source.droppableId}/cards/${movedItem.id}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              newColumnId: destination.droppableId,
+              newPosition: destination.index,
+            }),
+          });
+
+          if (socket) {
+            socket.emit('cardMoved', { boardId, sourceColumnId: source.droppableId, destColumnId: destination.droppableId, movedItem, newPosition: destination.index });
+          }
+        } catch (error) {
+          console.error('Error saving card position:', error);
+        }
+      } else {
+        sourceItems.splice(destination.index, 0, movedItem);
+        setColumns({
+          ...columns,
+          [source.droppableId]: { ...sourceColumn, items: sourceItems },
+        });
+
+        // Persist card reorder to the backend
+        try {
+          await fetch(`/api/workspaces/${workspaceId}/boards/${boardId}/columns/${source.droppableId}/cards/${movedItem.id}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ position: destination.index }),
+          });
+
+          if (socket) {
+            socket.emit('cardMoved', { boardId, sourceColumnId: source.droppableId, destColumnId: destination.droppableId, movedItem, newPosition: destination.index });
+          }
+        } catch (error) {
+          console.error('Error saving card reorder:', error);
+        }
+      }
+    }
+  };
 
   return (
-    <div className="p-4 flex flex-col items-start">
+    <div className="p-4 flex flex-col items-start relative"> 
       <h1 className="text-2xl font-semibold mb-4">Your Board</h1>
       <div className="flex justify-center w-full overflow-x-auto">
         <DragDropContext onDragEnd={onDragEnd}>
@@ -493,7 +465,7 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
               >
                 {columnOrder.map((columnId, index) => {
                   const column = columns[columnId];
-  
+
                   return (
                     <Draggable draggableId={columnId} index={index} key={columnId}>
                       {(provided) => (
@@ -508,7 +480,7 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
                           >
                             <h2
                               className="text-left font-semibold"
-                              onDoubleClick={() => openRenameDialog(columnId, column.name)} // Trigger rename dialog
+                              onDoubleClick={() => openRenameDialog(columnId, column.name)} 
                             >
                               {column.name}
                             </h2>
@@ -533,7 +505,7 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
                               </PopoverTrigger>
                               <PopoverContent align="end" sideOffset={8}>
                                 <button
-                                  onClick={() => openRenameDialog(columnId, column.name)} // Open rename dialog
+                                  onClick={() => openRenameDialog(columnId, column.name)}
                                   className="block w-full p-2 text-left"
                                 >
                                   Rename Column
@@ -547,14 +519,14 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
                               </PopoverContent>
                             </Popover>
                           </div>
-  
+
                           <div className="p-4 space-y-2 flex-grow">
                             <Droppable droppableId={columnId} key={columnId}>
                               {(provided) => (
                                 <div
                                   {...provided.droppableProps}
                                   ref={provided.innerRef}
-                                  className={`space-y-2`}
+                                  className="space-y-2"
                                 >
                                   {column.items.map((item, index) => (
                                     <Draggable key={item.id} draggableId={item.id} index={index}>
@@ -613,9 +585,26 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
             )}
           </Droppable>
         </DragDropContext>
+
+        {Object.keys(otherUsersMousePositions).map((otherUserId) => (
+          otherUserId !== userId && ( 
+            <div
+              key={otherUserId}
+              style={{
+                position: 'absolute',
+                left: `${otherUsersMousePositions[otherUserId]?.x}px`,
+                top: `${otherUsersMousePositions[otherUserId]?.y}px`,
+                pointerEvents: 'none',
+                backgroundColor: 'red',
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+              }}
+            />
+          )
+        ))}
       </div>
-  
-      {/* Rename Column Dialog */}
+
       <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -638,7 +627,9 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
       </Dialog>
     </div>
   );
-}
-  
+};
 
 export default Board;
+
+  
+

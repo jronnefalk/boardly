@@ -44,7 +44,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ columnId, item, deleteCard, renameC
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  setDialogOpen(true); // Open the dialog when "Edit" is clicked
+                  setDialogOpen(true); 
                 }}
                 className="block w-full p-2 text-left"
               >
@@ -63,7 +63,6 @@ const TaskCard: React.FC<TaskCardProps> = ({ columnId, item, deleteCard, renameC
           </Popover>
         </div>
   
-        {/* Dialog for Editing Task */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <button className="hidden">Open Dialog</button>
