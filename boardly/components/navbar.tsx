@@ -11,7 +11,7 @@ const textFont = Poppins({
 
 export default function Navbar({ isAuthenticated }: { isAuthenticated: boolean }) {
     return (
-        <div className="fixed top-0 w-full h-16 px-4 border-b shadow-sm bg-gradient-to-r from-sky-300 to-sky-600 text-white flex items-center">
+        <div className="fixed top-0 w-full h-16 px-4 border-b shadow-sm bg-gradient-to-r from-sky-300 to-sky-600 text-white flex items-center z-50">
             <div className="md:max-w-screen-2xl mx-auto flex items-center w-full justify-between">
                 <div className="flex items-center space-x-4">
                     <Logo />
@@ -24,3 +24,4 @@ export default function Navbar({ isAuthenticated }: { isAuthenticated: boolean }
         </div>
     );
 }
+

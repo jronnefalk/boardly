@@ -33,7 +33,7 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <aside className="w-64 flex-shrink-0 bg-white p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out border-r border-gray-200 flex flex-col relative">
+    <aside className="w-64 flex-shrink-0 bg-white p-6 shadow-lg transition-shadow duration-300 ease-in-out border-r border-gray-200 flex flex-col relative min-h-screen z-40">
       <div className="flex justify-between items-center mb-8">
         <h2 className="text-lg font-semibold text-gray-800">Workspaces</h2>
         <Popover>
