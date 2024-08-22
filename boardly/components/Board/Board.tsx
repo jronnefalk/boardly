@@ -71,6 +71,21 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
         setColumnOrder((prevOrder) => [...prevOrder, data.newColumn.id]);
       }
     });
+
+    socketInstance.on('serverColumnMoved', (data) => {
+      console.log('Received serverColumnMoved event:', data);
+      setColumnOrder(data.newColumnOrder);
+    });
+
+    socketInstance.on('serverColumnDeleted', (data) => {
+      console.log('Received serverColumnDeleted event:', data);
+      setColumns((prevColumns) => {
+        const newColumns = { ...prevColumns };
+        delete newColumns[data.columnId];
+        return newColumns;
+      });
+      setColumnOrder(data.newColumnOrder);
+    });
   
     return () => {
       socketInstance.disconnect();
@@ -144,38 +159,31 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
     const newColumnPosition = columnOrder.length + 1;
 
     try {
-      const response = await fetch(`/api/workspaces/${workspaceId}/boards/${boardId}/columns`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name: newColumnName, position: newColumnPosition }),
-      });
+        const response = await fetch(`/api/workspaces/${workspaceId}/boards/${boardId}/columns`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name: newColumnName, position: newColumnPosition }),
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to create column');
-      }
+        if (!response.ok) {
+            throw new Error('Failed to create column');
+        }
 
-      const newColumn = await response.json();
-      setColumns((prevColumns) => ({
-        ...prevColumns,
-        [newColumn.id]: {
-          id: newColumn.id,
-          name: newColumn.name,
-          items: [],
-        },
-      }));
-      setColumnOrder((prevOrder) => [...prevOrder, newColumn.id]);
-      setNewColumnName('');
+        const newColumn = await response.json();
 
-      console.log('Emitting message1 event:', { boardId, newColumn });
-      if (socket) {
-        socket.emit('message1', { boardId, newColumn });
-      }
+        console.log('Emitting message1 event:', { boardId, newColumn });
+        if (socket) {
+            socket.emit('message1', { boardId, newColumn });
+        }
+
+        setNewColumnName('');
     } catch (error) {
-      console.error('Error adding column:', error);
+        console.error('Error adding column:', error);
     }
-  };
+};
+
 
   const openRenameDialog = (columnId: string, currentName: string) => {
     setColumnToRename(columnId);
@@ -211,6 +219,9 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
           name: newName,
         },
       }));
+      if (socket) {
+        socket.emit('clientColumnMoved', { boardId, columnId, newName });
+      }
     } catch (error) {
       console.error('Error renaming column:', error);
     }
@@ -228,7 +239,7 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
       setColumnOrder(columnOrder.filter((id) => id !== columnId));
 
       if (socket) {
-        socket.emit('columnDeleted', { boardId, columnId, newColumnOrder: columnOrder.filter((id) => id !== columnId) });
+        socket.emit('clientColumnDeleted', { boardId, columnId, newColumnOrder: columnOrder.filter((id) => id !== columnId) });
       }
     } catch (error) {
       console.error('Error deleting column:', error);
@@ -383,7 +394,7 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
         }
         // Emit an event to the server for the column reorder
         if (socket) {
-          socket.emit('columnMoved', { boardId, newColumnOrder });
+          socket.emit('clientColumnMoved', { boardId, newColumnOrder });
         }
       } catch (error) {
         console.error('Error saving column order:', error);
