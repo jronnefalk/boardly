@@ -1,6 +1,5 @@
 import { Logo } from "@/components/logo";
 import { AuthButtons } from "@/components/authButtons";
-import { getUserInfo } from "@/lib/auth";
 import { Poppins } from "next/font/google";
 import { cn } from "@/lib/utils";
 
@@ -9,9 +8,7 @@ const textFont = Poppins({
     weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
 });
 
-export default async function Navbar() {
-    const { isAuthenticated } = await getUserInfo();
-
+export default function Navbar({ isAuthenticated }: { isAuthenticated: boolean }) {
     return (
         <div className="fixed top-0 w-full h-16 px-4 border-b shadow-sm bg-gradient-to-r from-sky-300 to-sky-600 text-white flex items-center">
             <div className="md:max-w-screen-2xl mx-auto flex items-center w-full justify-between">

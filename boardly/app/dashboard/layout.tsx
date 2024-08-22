@@ -37,15 +37,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
     return (
         <div className={cn("min-h-screen flex bg-gray-50")}>
             <Sidebar workspaces={workspaces} />
-            <div className={cn("flex-grow flex flex-col", textFont.className)}>
-                <Navbar /> 
+                <Navbar isAuthenticated={isAuthenticated} /> 
                 <div className="flex-grow flex flex-col pt-16">
                     {children}
                 </div>
-            </div>
         </div>
     );
 }
-
-
-
