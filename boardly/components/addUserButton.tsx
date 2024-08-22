@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { Input } from './ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 interface AddUserButtonProps {
   workspaceId: string;
@@ -37,19 +39,27 @@ const AddUserButton: React.FC<AddUserButtonProps> = ({ workspaceId }) => {
   };
 
   return (
-    <div>
-      <input
+    <div className="flex flex-col space-y-3">
+      <Input
         type="email"
         placeholder="Enter email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
+        className="w-full"
       />
-      <select value={role} onChange={(e) => setRole(e.target.value)}>
-        <option value="MEMBER">Member</option>
-        <option value="ADMIN">Admin</option>
-        <option value="REPORTER">Reporter</option>
-      </select>
-      <Button onClick={handleAddUser}>Add User</Button>
+      <Select value={role} onValueChange={setRole}>
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Select a role" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="MEMBER">Member</SelectItem>
+          <SelectItem value="ADMIN">Admin</SelectItem>
+          <SelectItem value="REPORTER">Reporter</SelectItem>
+        </SelectContent>
+      </Select>
+      <Button onClick={handleAddUser} className="w-full">
+        Add User
+      </Button>
     </div>
   );
 };

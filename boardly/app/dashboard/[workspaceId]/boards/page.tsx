@@ -5,10 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import AddUserButton from '@/components/addUserButton';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
+import AddIcon from '@/components/icons/AddIcon';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface BoardData {
   id: string;
@@ -23,6 +26,8 @@ export default function BoardsPage() {
   const [newBoardTitle, setNewBoardTitle] = useState('');
   const [selectedBoardId, setSelectedBoardId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
 
   useEffect(() => {
     async function fetchBoards() {
@@ -102,19 +107,8 @@ export default function BoardsPage() {
   };
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">Boards</h1>
-      <div className="mb-4 flex items-center">
-        <Input
-          value={newBoardTitle}
-          onChange={(e) => setNewBoardTitle(e.target.value)}
-          placeholder="New Board Title"
-          className="mr-2"
-        />
-        <Button onClick={handleCreateBoard}>
-          Create Board
-        </Button>
-      </div>
+    <div className="p-4">
+      <h1 className="text-3xl font-bold mb-6">Your Boards</h1>
 
       <DragDropContext onDragEnd={handleReorder}>
         <Droppable droppableId="boards-list" direction="horizontal">
@@ -122,7 +116,7 @@ export default function BoardsPage() {
             <div
               {...provided.droppableProps}
               ref={provided.innerRef}
-              className="flex space-x-4 overflow-x-auto"
+              className="grid grid-cols-4 gap-4"
             >
               {boards.map((board, index) => (
                 <Draggable key={board.id} draggableId={board.id} index={index}>
@@ -131,42 +125,48 @@ export default function BoardsPage() {
                       ref={provided.innerRef}
                       {...provided.draggableProps}
                       {...provided.dragHandleProps}
-                      className="min-w-[250px] cursor-pointer"
+                      className="cursor-pointer h-32"
                       onClick={() => handleSelectBoard(board.id)}
                     >
-                      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out relative">
+                      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out relative h-full">
                         <CardHeader className="pb-2">
-                          <CardTitle className="text-xl font-bold">{board.title}</CardTitle>
+                          <CardTitle className="text-lg font-bold">{board.title}</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <Popover>
-                            <PopoverTrigger asChild>
-                              <button className="absolute top-2 right-2 text-gray-600 hover:text-black">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  strokeWidth="1.5"
-                                  stroke="currentColor"
-                                  className="w-5 h-5"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"
-                                  />
-                                </svg>
-                              </button>
-                            </PopoverTrigger>
-                            <PopoverContent align="end" sideOffset={8}>
-                              <Button
-                                onClick={() => handleDeleteBoard(board.id)}
-                                variant="destructive"
-                                className="w-full text-xs py-1 px-2"
+                          <PopoverTrigger asChild>
+                            <button
+                              className="absolute top-2 right-2 text-gray-600 hover:text-black p-1"
+                              onClick={(e) => e.stopPropagation()} 
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth="1.5"
+                                stroke="currentColor"
+                                className="w-4 h-4"
                               >
-                                Delete
-                              </Button>
-                            </PopoverContent>
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"
+                                />
+                              </svg>
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent align="end" sideOffset={8}>
+                            <Button
+                              onClick={(e) => {
+                                e.stopPropagation(); 
+                                handleDeleteBoard(board.id);
+                              }}
+                              variant="destructive"
+                              className="w-full text-xs py-1 px-2"
+                            >
+                              Delete
+                            </Button>
+                          </PopoverContent>
                           </Popover>
                         </CardContent>
                       </Card>
@@ -174,11 +174,44 @@ export default function BoardsPage() {
                   )}
                 </Draggable>
               ))}
+
               {provided.placeholder}
+
+              <div
+                className="h-32 flex justify-center items-center bg-gray-100 border-dashed border-2 border-gray-300 rounded-lg cursor-pointer hover:bg-gray-200 transition"
+                onClick={() => setIsDialogOpen(true)}
+              >
+                <AddIcon className="h-8 w-8 text-gray-500" />
+              </div>
             </div>
           )}
         </Droppable>
       </DragDropContext>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Board</DialogTitle>
+          </DialogHeader>
+          <Input
+            value={newBoardTitle}
+            onChange={(e) => setNewBoardTitle(e.target.value)}
+            placeholder="Board Title"
+            className="mb-4"
+          />
+          <DialogFooter>
+            <Button 
+              onClick={handleCreateBoard}
+              className="bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-200"
+              >
+              Create
+            </Button>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
