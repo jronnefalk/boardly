@@ -1,8 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import Modal from '../Modal';
 import { io, Socket } from 'socket.io-client';
+import AddIcon from '../icons/AddIcon';
+import DotsIcon from '../icons/DotsIcon';
+import TaskCard from './TaskCard';
+import { Button } from '../ui/button';
 
 export interface Task {
   id: string;
@@ -40,6 +46,8 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [otherUsersMousePositions, setOtherUsersMousePositions] = useState<{ [key: string]: MousePosition }>({});
+  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
+  const [columnToRename, setColumnToRename] = useState<string | null>(null);
   
   
   useEffect(() => {
@@ -145,7 +153,6 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
     if (!newColumnName.trim()) return; 
 
     const newColumnPosition = columnOrder.length + 1;
-
     try {
       const response = await fetch(`/api/workspaces/${workspaceId}/boards/${boardId}/columns`, {
         method: 'POST',
@@ -160,7 +167,6 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
       }
 
       const newColumn = await response.json();
-
       setColumns({
         ...columns,
         [newColumn.id]: {
@@ -170,15 +176,27 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
         },
       });
       setColumnOrder([...columnOrder, newColumn.id]);
-      setNewColumnName(''); // Clear the input field after adding
+      setNewColumnName(''); 
 
-      // Emit an event to the server for the new column
       if (socket) {
         socket.emit('message1', { boardId, newColumn });
-            }
+      }
     } catch (error) {
       console.error('Error adding column:', error);
     }
+  };
+
+  const openRenameDialog = (columnId: string, currentName: string) => {
+    setColumnToRename(columnId);
+    setNewColumnName(currentName);
+    setIsRenameDialogOpen(true);
+};
+
+  const handleRenameColumn = async () => {
+      if (columnToRename && newColumnName.trim()) {
+          await renameColumn(columnToRename, newColumnName);
+          setIsRenameDialogOpen(false);
+      }
   };
 
   const renameColumn = async (columnId: string, newName: string) => {
@@ -443,15 +461,44 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
     }
   };  
   
+  const renameTask = async (columnId: string, cardId: string, newName: string) => {
+    try {
+      const response = await fetch(`/api/workspaces/${workspaceId}/boards/${boardId}/columns/${columnId}/cards/${cardId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content: newName }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to rename task');
+      }
+  
+      const updatedColumns = { ...columns };
+      const column = updatedColumns[columnId];
+      const taskIndex = column.items.findIndex((item) => item.id === cardId);
+      column.items[taskIndex].content = newName;
+  
+      setColumns(updatedColumns);
+    } catch (error) {
+      console.error('Error renaming task:', error);
+    }
+  };
+  
 
   return (
-    <div>
-      <h1 style={{ textAlign: 'center' }}>Your Board</h1>
-      <div style={{ display: 'flex', justifyContent: 'center', height: '100%' }}>
+    <div className="p-4 flex flex-col items-start">
+      <h1 className="text-2xl font-semibold mb-4">Your Board</h1>
+      <div className="flex justify-center w-full overflow-x-auto">
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="all-columns" direction="horizontal" type="COLUMN">
             {(provided) => (
-              <div {...provided.droppableProps} ref={provided.innerRef} style={{ display: 'flex' }}>
+              <div
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+                className="flex space-x-4"
+              >
                 {columnOrder.map((columnId, index) => {
                   const column = columns[columnId];
   
@@ -461,165 +508,145 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
-                          style={{
-                            ...provided.draggableProps.style,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            margin: '0 8px',
-                            background: '#f4f5f7',
-                            borderRadius: 3,
-                            padding: 8,
-                          }}
+                          className="flex flex-col w-80 bg-gray-100 rounded-lg shadow-md"
                         >
                           <div
-                            style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}
+                            className="flex justify-between items-center p-4 rounded-t-lg bg-white shadow-sm"
                             {...provided.dragHandleProps}
                           >
                             <h2
-                              onDoubleClick={() => {
-                                const newName = prompt('Enter new list name', column.name);
-                                if (newName) renameColumn(columnId, newName);
-                              }}
+                              className="text-left font-semibold"
+                              onDoubleClick={() => openRenameDialog(columnId, column.name)} // Trigger rename dialog
                             >
                               {column.name}
                             </h2>
                             <Popover>
                               <PopoverTrigger asChild>
-                                <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px' }}>
-                                  ⋮
+                                <button className="bg-none border-none cursor-pointer text-gray-500">
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth="1.5"
+                                    stroke="currentColor"
+                                    className="h-5 w-5"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M6.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM18.75 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"
+                                    />
+                                  </svg>
                                 </button>
                               </PopoverTrigger>
                               <PopoverContent align="end" sideOffset={8}>
                                 <button
-                                  onClick={() => {
-                                    const newName = prompt('Enter new list name', column.name);
-                                    if (newName) renameColumn(columnId, newName);
-                                  }}
-                                  style={{ display: 'block', width: '100%', padding: '8px', textAlign: 'left' }}
+                                  onClick={() => openRenameDialog(columnId, column.name)} // Open rename dialog
+                                  className="block w-full p-2 text-left"
                                 >
                                   Rename Column
                                 </button>
                                 <button
                                   onClick={() => deleteColumn(columnId)}
-                                  style={{ display: 'block', width: '100%', padding: '8px', textAlign: 'left', color: 'red' }}
+                                  className="block w-full p-2 text-left text-red-600"
                                 >
                                   Delete Column
                                 </button>
                               </PopoverContent>
                             </Popover>
                           </div>
-                          <Droppable droppableId={columnId} key={columnId}>
-                            {(provided, snapshot) => (
-                              <div
-                                {...provided.droppableProps}
-                                ref={provided.innerRef}
-                                style={{
-                                  background: snapshot.isDraggingOver ? 'lightblue' : 'lightgrey',
-                                  padding: 4,
-                                  width: 250,
-                                  minHeight: 500,
-                                }}
-                              >
-                                {column.items.map((item, index) => (
-                                  <Draggable key={item.id} draggableId={item.id} index={index}>
-                                    {(provided, snapshot) => (
-                                      <div
-                                        ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        {...provided.dragHandleProps}
-                                        style={{
-                                          userSelect: 'none',
-                                          padding: 16,
-                                          margin: '0 0 8px 0',
-                                          minHeight: '50px',
-                                          backgroundColor: snapshot.isDragging ? '#263B4A' : '#456C86',
-                                          color: 'white',
-                                          ...provided.draggableProps.style,
-                                        }}
-                                        onClick={() => openModal(item, columnId)}
-                                      >
-                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                          {item.content}
-                                          <button onClick={(e) => { e.stopPropagation(); deleteCard(columnId, item.id); }} style={{ marginLeft: 'auto' }}>
-                                            Delete
-                                          </button>
-                                        </div>
-                                      </div>
-                                    )}
-                                  </Draggable>
-                                ))}
-                                {provided.placeholder}
-                                <button
-                                  style={{ marginTop: 8, padding: 8, cursor: 'pointer' }}
-                                  onClick={() => addCard(columnId)}
+  
+                          <div className="p-4 space-y-2 flex-grow">
+                            <Droppable droppableId={columnId} key={columnId}>
+                              {(provided) => (
+                                <div
+                                  {...provided.droppableProps}
+                                  ref={provided.innerRef}
+                                  className={`space-y-2`}
                                 >
-                                  + Add a card
-                                </button>
-                              </div>
-                            )}
-                          </Droppable>
+                                  {column.items.map((item, index) => (
+                                    <Draggable key={item.id} draggableId={item.id} index={index}>
+                                      {(provided) => (
+                                        <div
+                                          ref={provided.innerRef}
+                                          {...provided.draggableProps}
+                                          {...provided.dragHandleProps}
+                                        >
+                                          <TaskCard
+                                            columnId={columnId}
+                                            item={item}
+                                            deleteCard={deleteCard}
+                                            renameCard={renameTask}
+                                            copyCard={copyTask}
+                                          />
+                                        </div>
+                                      )}
+                                    </Draggable>
+                                  ))}
+                                  {provided.placeholder}
+                                  <button
+                                    className="mt-2 p-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors text-gray-700 w-full text-left"
+                                    onClick={() => addCard(columnId)}
+                                  >
+                                    <AddIcon className="inline h-5 w-5 mr-1" />
+                                    Add a card
+                                  </button>
+                                </div>
+                              )}
+                            </Droppable>
+                          </div>
                         </div>
                       )}
                     </Draggable>
                   );
                 })}
                 {provided.placeholder}
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    marginLeft: 8,
-                    cursor: 'pointer',
-                  }}
-                >
+                <div className="flex flex-col items-center ml-4">
                   <input
                     type="text"
                     value={newColumnName}
                     onChange={(e) => setNewColumnName(e.target.value)}
                     placeholder="New List Name"
-                    style={{ marginBottom: '8px' }}
+                    className="mb-2 p-2 border rounded-lg w-80"
                   />
-                  <button onClick={addColumn}>+ Add a list</button>
+                  <button
+                    onClick={addColumn}
+                    className="p-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors text-gray-700"
+                  >
+                    <AddIcon className="inline h-5 w-5 mr-1" />
+                    Add a list
+                  </button>
                 </div>
               </div>
             )}
           </Droppable>
         </DragDropContext>
-  
-        {/* Render other users' cursors */}
-        {Object.keys(otherUsersMousePositions).map((userId) => (
-          <div
-            key={userId}
-            style={{
-              position: 'absolute',
-              left: `${otherUsersMousePositions[userId].x}px`,
-              top: `${otherUsersMousePositions[userId].y}px`,
-              pointerEvents: 'none',
-              backgroundColor: 'red',
-              width: '10px',
-              height: '10px',
-              borderRadius: '50%',
-            }}
-          >
-            {/* Optionally, add a user label or icon */}
-          </div>
-        ))}
       </div>
   
-      {isModalOpen && selectedTask && (
-        <Modal
-          task={selectedTask}
-          columnName={selectedColumnId ? columns[selectedColumnId]?.name : null}
-          onClose={closeModal}
-          onSave={saveTaskContent}
-          onDelete={() => deleteCard(selectedColumnId!, selectedTask.id)}
-          onCopy={copyTask}
-        />
-      )}
+      {/* Rename Column Dialog */}
+      <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename Column</DialogTitle>
+          </DialogHeader>
+          <input
+            type="text"
+            value={newColumnName}
+            onChange={(e) => setNewColumnName(e.target.value)}
+            className="w-full p-2 border rounded-lg"
+            placeholder="New Column Name"
+          />
+          <DialogFooter>
+            <Button onClick={handleRenameColumn}>Save</Button>
+            <Button variant="destructive" onClick={() => setIsRenameDialogOpen(false)}>
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+  
 
 export default Board;
