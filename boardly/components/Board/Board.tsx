@@ -167,9 +167,8 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
         }
 
         const newColumn = await response.json();
-        setNewColumnName(''); // Clear the input field after adding
+        setNewColumnName(''); 
 
-        // Do not update the state here. Let the socket event handle it.
         if (socket) {
             socket.emit('message1', { boardId, newColumn });
         }
@@ -419,40 +418,40 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
     }
   };
 
-  const copyTask = async () => {
-    if (selectedTask && selectedColumnId) {
-      try {
-        const newTaskContent = `${selectedTask.content} (copy)`;
-        const newTaskPosition = columns[selectedColumnId].items.length;
-  
-        const response = await fetch(`/api/workspaces/${workspaceId}/boards/${boardId}/columns/${selectedColumnId}/cards`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ content: newTaskContent, position: newTaskPosition }),
+  const copyCard = async (columnId: string, cardId: string) => {
+    try {
+        const cardToCopy = columns[columnId].items.find(card => card.id === cardId);
+        if (!cardToCopy) return;
+
+        const newCardContent = `${cardToCopy.content} (Copy)`;
+        const newCardPosition = columns[columnId].items.length;
+
+        const response = await fetch(`/api/workspaces/${workspaceId}/boards/${boardId}/columns/${columnId}/cards`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ content: newCardContent, position: newCardPosition }),
         });
-  
+
         if (!response.ok) {
-          throw new Error('Failed to copy card');
+            throw new Error('Failed to copy card');
         }
-  
+
         const newCard = await response.json();
-  
-        setColumns({
-          ...columns,
-          [selectedColumnId]: {
-            ...columns[selectedColumnId],
-            items: [...columns[selectedColumnId].items, newCard],
-          },
-        });
-  
-        closeModal();
-      } catch (error) {
+
+        setColumns(prevColumns => ({
+            ...prevColumns,
+            [columnId]: {
+                ...prevColumns[columnId],
+                items: [...prevColumns[columnId].items, newCard],
+            },
+        }));
+    } catch (error) {
         console.error('Error copying card:', error);
-      }
     }
-  };  
+};
+ 
   
   const renameTask = async (columnId: string, cardId: string, newName: string) => {
     try {
@@ -570,7 +569,7 @@ const Board: React.FC<BoardProps> = ({ boardId, workspaceId, userId }) => {
                                             item={item}
                                             deleteCard={deleteCard}
                                             renameCard={renameTask}
-                                            copyCard={copyTask}
+                                            copyCard={copyCard}
                                           />
                                         </div>
                                       )}

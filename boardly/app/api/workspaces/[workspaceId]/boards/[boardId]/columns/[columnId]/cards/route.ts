@@ -43,6 +43,7 @@ export async function POST(request: Request, { params }: { params: { columnId: s
   }
 }
 
+
 export async function GET(request: Request, { params }: { params: { columnId: string } }) {
   try {
     const { columnId } = params;
