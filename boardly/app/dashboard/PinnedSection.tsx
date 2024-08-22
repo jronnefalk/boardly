@@ -13,6 +13,7 @@ interface PinnedItem {
   type: "workspace" | "board";
   workspaceName?: string;
   workspaceId: string; 
+  boardId?: string;
 }
 
 interface Workspace {
@@ -101,44 +102,42 @@ export const PinnedSection: React.FC = () => {
 };
 
 
+const handlePinWorkspaceOrBoard = async () => {
+  if (!selectedItem.workspaceId) return;
 
-  const handlePinWorkspaceOrBoard = async () => {
-    if (!selectedItem.workspaceId) return;
-  
-    try {
-      const response = await fetch("/api/pinned", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          workspaceId: selectedItem.workspaceId,
-          boardId: selectedItem.boardId || undefined,
-        }),
-      });
-  
-      if (response.ok) {
-        const newItem = await response.json();
-        setPinnedItems([...pinnedItems, newItem]);
-        toast.success("Workspace or board pinned successfully!");
-      } else {
-        const errorData = await response.json();
-        toast.error(errorData.error || "Failed to pin item");
-      }
-    } catch (error) {
-      toast.error("An unexpected error occurred");
-    }
-  };
-  
+  try {
+    const response = await fetch("/api/pinned", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        workspaceId: selectedItem.workspaceId,
+        boardId: selectedItem.boardId || undefined,
+      }),
+    });
 
-  const handleCardClick = (item: PinnedItem) => {
-    if (item.type === "workspace") {
-      router.push(`/dashboard/${item.workspaceId}/boards`);
-    } else if (item.type === "board") {
-      router.push(`/dashboard/${item.workspaceId}/boards/${item.id}`);
+    if (response.ok) {
+      const newItem = await response.json();
+      setPinnedItems([...pinnedItems, newItem]);
+      toast.success("Workspace or board pinned successfully!");
+    } else {
+      const errorData = await response.json();
+      toast.error(errorData.error || "Failed to pin item");
     }
-  };
-  
+  } catch (error) {
+    toast.error("An unexpected error occurred");
+  }
+};
+
+const handleCardClick = (item: PinnedItem) => {
+  if (item.type === "workspace") {
+    router.push(`/dashboard/${item.workspaceId}/boards`);
+  } else if (item.type === "board" && item.boardId) {  
+    router.push(`/dashboard/${item.workspaceId}/boards/${item.boardId}`);
+  }
+};
+ 
 
   return (
     <div className="pinned-section mb-6">
