@@ -12,7 +12,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponseWithSoc
   if (!res.socket.server.wss) {
     console.log('Setting up WebSocket server');
 
-    // Create a new WebSocket server and attach it to the existing HTTP server
     const wss = new WebSocketServer({ server: res.socket.server });
 
     wss.on('connection', (ws) => {
@@ -21,7 +20,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponseWithSoc
       ws.on('message', (message) => {
         console.log('Received:', message);
 
-        // Broadcast the message to all other connected clients
         wss.clients.forEach((client) => {
           if (client !== ws && client.readyState === ws.OPEN) {
             client.send(message);

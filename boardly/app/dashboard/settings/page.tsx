@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -12,7 +12,6 @@ import { useWorkspace } from '@/components/WorkspaceContext';
 
 export default function SettingsPage() {
   const { workspaces, removeWorkspace } = useWorkspace();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const selectedWorkspaceId = searchParams?.get('workspaceId') ?? '';
   const [currentWorkspaceId, setCurrentWorkspaceId] = useState(selectedWorkspaceId);

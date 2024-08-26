@@ -2,18 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
-import CreateWorkspaceButton from '@/components/createWorkspaceButton';
-import { Button } from '@/components/ui/button';
 import { Poppins } from 'next/font/google';
 import { cn } from '@/lib/utils';
-import AddUserButton from '@/components/addUserButton';
-import ChangeUserRoleButton from '@/components/changeUserRoleButton';
 import DashboardActivityFeed from '@/components/DashboardActivityFeed';
-import { toast } from 'sonner';
 import { PinnedSection } from './PinnedSection';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card } from '@/components/ui/card';
 
 const textFont = Poppins({
   subsets: ['latin'],
@@ -79,48 +72,6 @@ export default function DashboardPage() {
     }
   };
 
-  const handleWorkspaceSwitch = (workspaceId: string) => {
-    setCurrentWorkspaceId(workspaceId);
-    router.push(`/dashboard?workspaceId=${workspaceId}`);
-  };
-
-  const handleDeleteWorkspace = async () => {
-    if (!currentWorkspaceId) {
-      return;
-    }
-
-    const confirmed = window.confirm('Are you sure you want to delete this workspace?');
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/workspaces/${currentWorkspaceId}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        setWorkspaces((prev) => prev.filter((ws) => ws.id !== currentWorkspaceId));
-        setCurrentWorkspaceId(workspaces.length > 1 ? workspaces[0]?.id : '');
-        toast.success('Workspace deleted successfully!');
-        router.push('/dashboard');
-      } else {
-        const data = await response.json();
-        setErrorMessage(data.error || 'Failed to delete workspace');
-        toast.error(data.error || 'Failed to delete workspace');
-      }
-    } catch (error: any) {
-      setErrorMessage('An unexpected error occurred');
-      toast.error('Error deleting workspace: ' + error.message);
-    }
-  };
-
-  const handleAddWorkspace = (newWorkspace: Workspace) => {
-    const { id, name } = newWorkspace;
-    setWorkspaces((prev) => [...prev, newWorkspace]);
-    setCurrentWorkspaceId(id);
-    router.push(`/dashboard?workspaceId=${id}`);
-  };
 
   return (
     <div className="bg-gray-50 min-h-screen">
