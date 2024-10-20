@@ -31,6 +31,12 @@
 - **Real-Time Communication**: WebSockets via Socket.IO for real-time collaboration.
 - **Authentication**: Kinde for secure user authentication and session management.
 
+![Demo](boardly/public/demo2.png)
+![Demo](boardly/public/demo3.png)
+![Demo](boardly/public/demo4.png)
+![Demo](boardly/public/demo5.png)
+
+
 ## Getting Started
 
 First, clone the repository and navigate to the project directory. Then, install the dependencies:
