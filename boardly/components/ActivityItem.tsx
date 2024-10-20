@@ -14,7 +14,7 @@ export const ActivityItem = ({ data }: ActivityItemProps) => {
           <span className="font-semibold lowercase text-neutral-700">
             {data.user.email}
           </span>{" "}
-          {data.action}: "{data.description}"
+          {data.action}: &quot;{data.description}&quot;
         </p>
         <p className="text-xs text-muted-foreground">
           {data.workspaceName && <span>In: {data.workspaceName}</span>}
