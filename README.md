@@ -34,7 +34,6 @@
 ![Demo](boardly/public/demo2.png)
 ![Demo](boardly/public/demo3.png)
 ![Demo](boardly/public/demo4.png)
-![Demo](boardly/public/demo5.png)
 
 
 ## Getting Started
