@@ -4,6 +4,8 @@
 
 **Boardly** is a web-based, real-time collaborative project management tool designed for task management and teamwork. Inspired by platforms like Trello and Jira, Boardly allows users to create boards, manage tasks, and collaborate with team members in real-time.
 
+![Start page](boardly/public/demo1.png)
+
 ## Core Features
 
 - **User Authentication**: Secure login and registration through Kinde.
