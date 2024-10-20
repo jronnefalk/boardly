@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { io, Socket } from 'socket.io-client';
 import AddIcon from '../icons/AddIcon';
-import TaskCard from './TaskCard';
+import TaskCard from '@/components/Board/TaskCard';
 import { Button } from '../ui/button';
 
 export interface Task {
