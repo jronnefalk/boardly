@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import Board from '@/components/board/Board';
+import Board from '@/components/Board/Board';
 
 const BoardPage = () => {
   const params = useParams<{ workspaceId: string; boardId: string }>();
